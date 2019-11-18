@@ -9,6 +9,7 @@ use quick_protobuf::{MessageRead, BytesReader};
 
 mod vector_tile;
 use vector_tile::Tile;
+use crate::vector_tile::mod_Tile::GeomType;
 
 fn de_zig_zag(param_u: u32) -> f64 {
     let param = param_u as i32;
@@ -16,16 +17,23 @@ fn de_zig_zag(param_u: u32) -> f64 {
 }
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
+    rc.clear(Color::BLACK);
+    let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
+    let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
+    let dark_gray = rc.solid_brush(Color::rgba8(0x11, 0x11, 0x11, 0xFF));
+    let near_white = rc.solid_brush(Color::rgba8(0x77, 0x77, 0x77, 0xFF));
+
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
 
     for layer in &tile.layers {
-
-        if layer.name == "places" {
+        if layer.name == "places"  || layer.name == "earth" {
             continue
         }
-
         for feature in &layer.features {
+            if feature.type_pb == GeomType::POINT {
+                continue
+            }
             let cmd_len = feature.geometry.len();
             let mut pos = 0;
             let mut cursor_x = 0.0;
@@ -67,14 +75,15 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                 pos+=1;
             }
 
-            let brush = rc.solid_brush(Color::rgb8(0x00, 0x00, 0x00));
-            rc.stroke(path, &brush, 1.0);
+            if feature.type_pb == GeomType::POLYGON {
+                rc.fill(path, &dark_gray);
+            } else {
+                rc.stroke(path, &near_white, 1.0);
+            }
         }
     };
 
     let font = rc.text().new_font_by_name("Helvetica", 32.0).build().unwrap();
-    let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
-    let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
     for layer in &tile.layers {
         if layer.name != "places" {
             continue
@@ -87,7 +96,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                 if layer.keys[feature.tags[x] as usize] == "name" {
                     let name = layer.values[feature.tags[x+1] as usize].string_value.as_ref().unwrap();
                     let layout = rc.text().new_text_layout(&font, &name).build().unwrap();
-                    rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 5.0);
+                    rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
                     rc.draw_text(&layout, (cursor_x,cursor_y), &white);
                 }
             }
