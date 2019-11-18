@@ -10,6 +10,7 @@ use piet_cairo::CairoRenderContext;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let vector_tile = &args[1];
+    let output_file = &args[2];
     println!("Input {}", vector_tile);
 
     let surface = ImageSurface::create(Format::ARgb32, 1024, 1024)
@@ -24,7 +25,7 @@ fn main() {
 
     piet_context.finish().unwrap();
     surface.flush();
-    let mut file = File::create("temp-cairo.png").expect("Couldn't create 'file.png'");
+    let mut file = File::create(output_file).expect("Couldn't create 'file.png'");
     surface
         .write_to_png(&mut file)
         .expect("Error writing image file");

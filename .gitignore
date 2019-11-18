@@ -4,3 +4,4 @@ node_modules
 leaflet.css
 leaflet.js
 *.mvt
+*.png
