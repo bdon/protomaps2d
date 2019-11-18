@@ -49,72 +49,99 @@ impl Collider {
     }
 }
 
+fn geom_to_path(geometry:&Vec<u32>, path:&mut BezPath) {
+    let cmd_len = geometry.len();
+    let mut pos = 0;
+    let mut cursor_x = 0.0;
+    let mut cursor_y = 0.0;
+    while pos < cmd_len {
+
+        let cmd_integer = geometry[pos];
+        let id = cmd_integer & 0x7;
+        let count = cmd_integer >> 3;
+
+        if id == 1 {
+            // MoveTo
+            for _c in 0..count {
+                pos+=1;
+                let x = de_zig_zag(geometry[pos]);
+                pos+=1;
+                let y = de_zig_zag(geometry[pos]);
+                cursor_x += x;
+                cursor_y += y;
+                path.move_to((cursor_x,cursor_y));
+            }
+        } else if id == 2 {
+            // LineTo
+            for _c in 0..count {
+                pos+=1;
+                let x = de_zig_zag(geometry[pos]);
+                pos+=1;
+                let y = de_zig_zag(geometry[pos]);
+                cursor_x += x;
+                cursor_y += y;
+                path.line_to((cursor_x,cursor_y));
+            }
+
+        } else {
+            // ClosePath
+            path.close_path();
+        }
+        pos+=1;
+    }
+}
+
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
     rc.clear(Color::BLACK);
     let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
     let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let dark_gray = rc.solid_brush(Color::rgba8(0x11, 0x11, 0x11, 0xFF));
+    let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
     let near_white = rc.solid_brush(Color::rgba8(0x77, 0x77, 0x77, 0xFF));
 
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
 
+    // draw water polygons
     for layer in &tile.layers {
-        if layer.name == "places"  || layer.name == "earth" {
-            continue
+        if layer.name == "water" {
+            for feature in &layer.features {
+                if feature.type_pb != GeomType::POLYGON {
+                    continue
+                }
+                let mut path = BezPath::new();
+                geom_to_path(&feature.geometry,&mut path);
+                rc.fill(path, &dark_gray);
+            }
+
         }
+    }
+
+    // draw stroked
+    for layer in &tile.layers {
         for feature in &layer.features {
-            if feature.type_pb == GeomType::POINT {
+            if feature.type_pb != GeomType::LINESTRING {
                 continue
             }
-            let cmd_len = feature.geometry.len();
-            let mut pos = 0;
-            let mut cursor_x = 0.0;
-            let mut cursor_y = 0.0;
             let mut path = BezPath::new();
-            while pos < cmd_len {
-
-                let cmd_integer = feature.geometry[pos];
-                let id = cmd_integer & 0x7;
-                let count = cmd_integer >> 3;
-
-                if id == 1 {
-                    // MoveTo
-                    for _c in 0..count {
-                        pos+=1;
-                        let x = de_zig_zag(feature.geometry[pos]);
-                        pos+=1;
-                        let y = de_zig_zag(feature.geometry[pos]);
-                        cursor_x += x;
-                        cursor_y += y;
-                        path.move_to((cursor_x,cursor_y));
-                    }
-                } else if id == 2 {
-                    // LineTo
-                    for _c in 0..count {
-                        pos+=1;
-                        let x = de_zig_zag(feature.geometry[pos]);
-                        pos+=1;
-                        let y = de_zig_zag(feature.geometry[pos]);
-                        cursor_x += x;
-                        cursor_y += y;
-                        path.line_to((cursor_x,cursor_y));
-                    }
-
-                } else {
-                    // ClosePath
-                    path.close_path();
-                }
-                pos+=1;
-            }
-
-            if feature.type_pb == GeomType::POLYGON {
-                rc.fill(path, &dark_gray);
-            } else {
-                rc.stroke(path, &near_white, 1.0);
-            }
+            geom_to_path(&feature.geometry,&mut path);
+            rc.stroke(path, &near_white, 1.0);
         }
     };
+
+    // draw buildings
+    for layer in &tile.layers {
+        if layer.name == "buildings" {
+            for feature in &layer.features {
+                if feature.type_pb != GeomType::POLYGON {
+                    continue
+                }
+                let mut path = BezPath::new();
+                geom_to_path(&feature.geometry,&mut path);
+                rc.fill(path, &mid_gray);
+            }
+        }
+    }
 
     let mut collider = Collider{bboxes:Vec::new()};
     let font_size = 32.0;
