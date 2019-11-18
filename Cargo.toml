@@ -1,0 +1,25 @@
+[package]
+name = "protomaps-alpha"
+version = "0.0.1"
+authors = ["Brandon Liu <brandon@protomaps.com>"]
+license = "BSD"
+edition = "2018"
+keywords = ["graphics", "gis"]
+repository = "https://github.com/protomaps/alpha"
+description = "A retargetable rasterizer for map tiles."
+readme = "README"
+categories = ["graphics"]
+
+[dependencies]
+#piet = "0.0.7"
+piet = { path = "../../rust/piet/piet" }
+quick-protobuf = "0.6.2"
+
+[target.'cfg(not(any(target_arch="wasm32", target_os="windows")))'.dependencies]
+piet-cairo = { version = "0.0.7", path = "../../rust/piet/piet-cairo" }
+cairo-rs = { version = "0.7.1", default_features = false}
+
+[dev-dependencies.cairo-rs]
+version = "0.7.1"
+features = ["png"]
+default-features = false

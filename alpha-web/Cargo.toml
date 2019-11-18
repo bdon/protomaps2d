@@ -1,0 +1,25 @@
+[package]
+name = "protomaps-alpha-web"
+version = "0.0.1"
+authors = ["Brandon Liu <brandon@protomaps.com>"]
+license = "BSD"
+edition = "2018"
+keywords = ["graphics", "gis"]
+repository = "https://github.com/protomaps/alpha"
+description = "WASM target for Protomaps Alpha"
+readme = "README"
+categories = ["graphics"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.30"
+console_error_panic_hook = "0.1.6"
+#piet-web = "0.0.7"
+piet-web = { path = "../../../rust/piet/piet-web" }
+protomaps-alpha = { path = ".." }
+
+[dependencies.web-sys]
+version = "0.3.10"
+features = ["console", "CanvasRenderingContext2d", "Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement"]
