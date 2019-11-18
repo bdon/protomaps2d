@@ -1,7 +1,7 @@
 use piet::kurbo::{ BezPath};
 
 use piet::{
-    Color, FontBuilder, RenderContext, Text, TextLayoutBuilder
+    Color, FontBuilder, RenderContext, Text, TextLayoutBuilder, TextLayout
 };
 
 extern crate quick_protobuf;
@@ -14,6 +14,39 @@ use crate::vector_tile::mod_Tile::GeomType;
 fn de_zig_zag(param_u: u32) -> f64 {
     let param = param_u as i32;
     return ((param >> 1) ^ (-1 * (param & 1))) as f64 / 4.0
+}
+
+// a very primitive label collider,
+// that does a linear search over drawn labels,
+// rejecting any that intersect.
+pub struct Collider {
+    pub bboxes:Vec<((f64, f64),(f64, f64))>
+}
+
+impl Collider {
+    pub fn add(&mut self, topleft: (f64, f64), bottomright: (f64, f64)) -> bool {
+        for bbox in &self.bboxes {
+            // x axis
+            if bottomright.0 < (bbox.0).0 {
+                continue
+            }
+            if topleft.0 > (bbox.1).0 {
+                continue
+            }
+
+            // y axis
+            if bottomright.1 < (bbox.0).1 {
+                continue
+            }
+            if topleft.1 > (bbox.1).1 {
+                continue
+            }
+
+            return false;
+        } 
+        self.bboxes.push((topleft,bottomright));
+        return true;
+    }
 }
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
@@ -83,7 +116,9 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
         }
     };
 
-    let font = rc.text().new_font_by_name("Helvetica", 32.0).build().unwrap();
+    let mut collider = Collider{bboxes:Vec::new()};
+    let font_size = 32.0;
+    let font = rc.text().new_font_by_name("Helvetica", font_size).build().unwrap();
     for layer in &tile.layers {
         if layer.name != "places" {
             continue
@@ -96,8 +131,10 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                 if layer.keys[feature.tags[x] as usize] == "name" {
                     let name = layer.values[feature.tags[x+1] as usize].string_value.as_ref().unwrap();
                     let layout = rc.text().new_text_layout(&font, &name).build().unwrap();
-                    rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
-                    rc.draw_text(&layout, (cursor_x,cursor_y), &white);
+                    if collider.add((cursor_x,cursor_y-font_size),(cursor_x+layout.width(),cursor_y)) {
+                        rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
+                        rc.draw_text(&layout, (cursor_x,cursor_y), &white);
+                    }
                 }
             }
         }
