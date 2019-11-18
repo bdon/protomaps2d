@@ -1,5 +1,3 @@
 target
 yarn.lock
 node_modules
-leaflet.css
-leaflet.js
