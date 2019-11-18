@@ -158,10 +158,15 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                 if layer.keys[feature.tags[x] as usize] == "name" {
                     let name = layer.values[feature.tags[x+1] as usize].string_value.as_ref().unwrap();
                     let layout = rc.text().new_text_layout(&font, &name).build().unwrap();
-                    if collider.add((cursor_x,cursor_y-font_size),(cursor_x+layout.width(),cursor_y)) {
-                        rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
-                        rc.draw_text(&layout, (cursor_x,cursor_y), &white);
+
+                    if (cursor_y-font_size < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
+                        continue;
                     }
+                    if !collider.add((cursor_x,cursor_y-font_size),(cursor_x+layout.width(),cursor_y)) {
+                        continue;
+                    }
+                    rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
+                    rc.draw_text(&layout, (cursor_x,cursor_y), &white);
                 }
             }
         }
