@@ -14,10 +14,30 @@
             .leaflet-container {
                 background: black;
             }
+
+            .leaflet-touch .leaflet-control-attribution {
+                background-color: black;
+                color: #666;
+            }
+
+            .leaflet-bar a, .leaflet-bar a:hover {
+                background-color:#001B44;
+                color:#A463F2;
+                border-bottom:1px solid #A463F2;
+            }
+
+            .leaflet-bar a.leaflet-disabled {
+                background-color:black;
+            }
         </style>
     </head>
-    <body class="flex sans-serif bg-black white">
-        <div class="w-100" id="map"></div>
+    <body class="flex sans-serif">
+        <div class="flex flex-column flex-grow-1">
+            <div class="w-100" id="map"></div>
+            <div class="pa3 bg-navy light-purple">
+               <a class="light-purple" href="https://github.com/protomaps/Alpha" target="_blank">α on GitHub</a>
+            </div>
+        </div>
         <script type="module">
             import init, { wasm_render_tile } from './protomaps_alpha_web.js'
 
@@ -35,17 +55,22 @@
                 }
             })
 
-            var map = L.map('map',{crs:myCrs})
+            var map = L.map('map',{crs:myCrs,zoomControl:false})
             map.setView([0,0], 1)
+
+            L.control.zoom({
+                position: 'bottomleft'
+            }).addTo(map);
 
             async function run() {
                 await init()
                 var CanvasLayer = L.GridLayer.extend({
                     createTile: function(coords,done){
                         var error
-                        var tile_id = coords.z + '-' + coords.x + '-' + coords.y
                         var tile = L.DomUtil.create('canvas', 'leaflet-tile')
-                        tile.id = tile_id
+                        if (!this.renderedTiles) this.renderedTiles = 0
+                        tile.id = "pmap_alpha_" + this.renderedTiles
+                        this.renderedTiles = this.renderedTiles + 1
                         tile.width = 2048
                         tile.height = 2048
 
@@ -56,7 +81,7 @@
                             return resp.arrayBuffer()
                         }).then(buf => {
                             var x = new Uint8Array(buf)
-                            wasm_render_tile(tile_id,x)
+                            wasm_render_tile(tile.id,x)
                             done(error,tile)
                         })
 
