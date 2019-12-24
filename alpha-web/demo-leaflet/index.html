@@ -42,6 +42,7 @@
             import init, { wasm_render_tile } from './protomaps_alpha_web.js'
 
             var ratio = window.devicePixelRatio
+            const tile_size = 2048/ratio
             var myCrs = L.extend({}, L.CRS.EPSG3857, {
                 scale:function (zoom) {
                    return tile_size * Math.pow(2,zoom)
