@@ -144,7 +144,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
     }
 
     let mut collider = Collider{bboxes:Vec::new()};
-    let font_size = 32.0;
+    let font_size = 48.0;
     let font = rc.text().new_font_by_name("Helvetica", font_size).build().unwrap();
     for layer in &tile.layers {
         if layer.name != "places" {

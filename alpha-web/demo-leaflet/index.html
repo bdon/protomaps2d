@@ -3,6 +3,7 @@
     <head>
         <title>α Leaflet</title>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"></link>
         <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"></link>
         <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
@@ -16,25 +17,23 @@
         </style>
     </head>
     <body class="flex sans-serif bg-black white">
-        <div class="w-25 pa3">
-            <h1>α</h1>
-            <h4 class="">prototype WebAssembly map rasterizer</h2>
-            <h4 class="silver">an experiment by <a class="link silver underline" href="https://protomaps.com">Protomaps.</a></h2>
-            <h4>source: <a class="link silver underline" href="https://github.com/protomaps/Alpha">github.com/protomaps/Alpha</a></h3>
-        </div>
-        <div class="w-75" id="map"></div>
+        <div class="w-100" id="map"></div>
         <script type="module">
             import init, { wasm_render_tile } from './protomaps_alpha_web.js'
-            var tile_size = 1024
+
+            var ratio = 1
+            if (window.devicePixelRatio == 2) ratio = 2
+            else if (window.devicePixelRatio == 3) ratio = 2.6
+            const tile_size = 2048/ratio
 
             var myCrs = L.extend({}, L.CRS.EPSG3857, {
                 scale:function (zoom) {
-                   return tile_size * Math.pow(2,zoom); 
+                   return tile_size * Math.pow(2,zoom)
                 },
                 zoom :function(scale) {
-                    return Math.log(scale / tile_size) / Math.LN2;
+                    return Math.log(scale / tile_size) / Math.LN2
                 }
-            });
+            })
 
             var map = L.map('map',{crs:myCrs})
             map.setView([0,0], 1)
@@ -47,11 +46,10 @@
                         var tile_id = coords.z + '-' + coords.x + '-' + coords.y
                         var tile = L.DomUtil.create('canvas', 'leaflet-tile')
                         tile.id = tile_id
-                        var size = this.getTileSize()
-                        tile.width = size.x * 2
-                        tile.height = size.y * 2
+                        tile.width = 2048
+                        tile.height = 2048
 
-                        var api_key = "YOUR_API_KEY"
+                        var api_key = ""
                         var tile_url = `https://a.tile.nextzen.org/tilezen/vector/v1/512/all/${coords.z}/${coords.x}/${coords.y}.mvt?api_key=${api_key}`
 
                         fetch(tile_url).then(resp => {
@@ -63,7 +61,20 @@
                         })
 
                         return tile
-                    }
+                    },
+
+                    _removeTile: function (key) {
+                        var tile = this._tiles[key]
+                        if (!tile) { return }
+                        tile.el.width = 0
+                        tile.el.height = 0
+                        L.DomUtil.remove(tile.el)
+                        delete this._tiles[key]
+                        this.fire('tileunload', {
+                            tile: tile.el,
+                            coords: this._keyToTileCoords(key)
+                        })
+                    },
                 })
                 var c = new CanvasLayer({tileSize:tile_size,attribution: 'Map Tiles &copy; Nextzen; &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:15,detectRetina:true})
                 c.addTo(map)
