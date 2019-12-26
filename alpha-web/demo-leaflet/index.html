@@ -7,9 +7,11 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"></link>
         <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"></link>
         <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+        <script src="leaflet-hash.js"></script>
         <style>
             html, body, #map {
                 height:100%;
+                background: black;
             }
             .leaflet-container {
                 background: black;
@@ -54,6 +56,7 @@
 
             var map = L.map('map',{crs:myCrs,zoomControl:false})
             map.setView([0,0], 1)
+            var hash = new L.Hash(map)
 
             L.control.zoom({
                 position: 'bottomleft'
