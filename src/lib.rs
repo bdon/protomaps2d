@@ -11,6 +11,9 @@ mod vector_tile;
 use vector_tile::Tile;
 use crate::vector_tile::mod_Tile::GeomType;
 
+#[macro_use]
+extern crate log;
+
 fn de_zig_zag(param_u: u32) -> f64 {
     let param = param_u as i32;
     return ((param >> 1) ^ (-1 * (param & 1))) as f64 / 4.0

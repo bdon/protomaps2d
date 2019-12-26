@@ -6,11 +6,15 @@ use protomaps_alpha::render_tile;
 
 use std::panic;
 extern crate console_error_panic_hook;
+use console_log;
 
 
 #[wasm_bindgen]
 pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>) {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    console_log::init();
+
     let window_opt = window();
     if window_opt.is_none() {
         return;
