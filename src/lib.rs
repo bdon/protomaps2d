@@ -14,9 +14,10 @@ use crate::vector_tile::mod_Tile::GeomType;
 #[macro_use]
 extern crate log;
 
-fn de_zig_zag(param_u: u32) -> f64 {
+fn de_zig_zag(param_e: u32, param_u: u32) -> f64 {
     let param = param_u as i32;
-    return ((param >> 1) ^ (-1 * (param & 1))) as f64 / 4.0
+    let extent = (param_e / 2048) as f64;
+    return ((param >> 1) ^ (-1 * (param & 1))) as f64 / extent;
 }
 
 // a very primitive label collider,
@@ -52,7 +53,7 @@ impl Collider {
     }
 }
 
-fn geom_to_path(geometry:&Vec<u32>, path:&mut BezPath) {
+fn geom_to_path(geometry:&Vec<u32>, extent:u32, path:&mut BezPath) {
     let cmd_len = geometry.len();
     let mut pos = 0;
     let mut cursor_x = 0.0;
@@ -67,9 +68,9 @@ fn geom_to_path(geometry:&Vec<u32>, path:&mut BezPath) {
             // MoveTo
             for _c in 0..count {
                 pos+=1;
-                let x = de_zig_zag(geometry[pos]);
+                let x = de_zig_zag(extent,geometry[pos]);
                 pos+=1;
-                let y = de_zig_zag(geometry[pos]);
+                let y = de_zig_zag(extent,geometry[pos]);
                 cursor_x += x;
                 cursor_y += y;
                 path.move_to((cursor_x,cursor_y));
@@ -78,9 +79,9 @@ fn geom_to_path(geometry:&Vec<u32>, path:&mut BezPath) {
             // LineTo
             for _c in 0..count {
                 pos+=1;
-                let x = de_zig_zag(geometry[pos]);
+                let x = de_zig_zag(extent,geometry[pos]);
                 pos+=1;
-                let y = de_zig_zag(geometry[pos]);
+                let y = de_zig_zag(extent,geometry[pos]);
                 cursor_x += x;
                 cursor_y += y;
                 path.line_to((cursor_x,cursor_y));
@@ -94,7 +95,7 @@ fn geom_to_path(geometry:&Vec<u32>, path:&mut BezPath) {
     }
 }
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
+pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     rc.clear(Color::BLACK);
     let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
     let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
@@ -105,6 +106,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
 
+    // preprocess tile into a thing with hashmaps for lookup
+
     // draw water polygons
     for layer in &tile.layers {
         if layer.name == "water" {
@@ -113,7 +116,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                     continue
                 }
                 let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,&mut path);
+                geom_to_path(&feature.geometry,layer.extent, &mut path);
                 rc.fill(path, &dark_gray);
             }
 
@@ -127,8 +130,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                 continue
             }
             let mut path = BezPath::new();
-            geom_to_path(&feature.geometry,&mut path);
-            rc.stroke(path, &near_white, 1.0);
+            geom_to_path(&feature.geometry,layer.extent,&mut path);
+            rc.stroke(&path, &mid_gray, 5.0);
         }
     };
 
@@ -140,22 +143,22 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>) {
                     continue
                 }
                 let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,&mut path);
+                geom_to_path(&feature.geometry,layer.extent,&mut path);
                 rc.fill(path, &mid_gray);
             }
         }
     }
 
     let mut collider = Collider{bboxes:Vec::new()};
-    let font_size = 48.0;
+    let font_size = 22.0;
     let font = rc.text().new_font_by_name("Helvetica", font_size).build().unwrap();
     for layer in &tile.layers {
         if layer.name != "places" {
             continue
         }
         for feature in &layer.features {
-            let cursor_x = de_zig_zag(feature.geometry[1]);
-            let cursor_y = de_zig_zag(feature.geometry[2]);
+            let cursor_x = de_zig_zag(layer.extent,feature.geometry[1]);
+            let cursor_y = de_zig_zag(layer.extent,feature.geometry[2]);
 
             for x in (0..feature.tags.len()).step_by(2) {
                 if layer.keys[feature.tags[x] as usize] == "name" {

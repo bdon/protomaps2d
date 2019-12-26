@@ -10,7 +10,7 @@ use console_log;
 
 
 #[wasm_bindgen]
-pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>) {
+pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32) {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     console_log::init();
@@ -48,5 +48,5 @@ pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>) {
     let mut c4 = c3.unwrap();
     let mut rc = WebRenderContext::new(&mut c4, &window);
 
-    render_tile(&mut rc,&buf);
+    render_tile(&mut rc,&buf,zoom);
 }

@@ -77,8 +77,8 @@
                         fetch(tile_url).then(resp => {
                             return resp.arrayBuffer()
                         }).then(buf => {
-                            var x = new Uint8Array(buf)
-                            wasm_render_tile(tile.id,x)
+                            var arr = new Uint8Array(buf)
+                            wasm_render_tile(tile.id,arr,coords.z)
                             done(error,tile)
                         })
 
