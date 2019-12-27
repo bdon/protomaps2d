@@ -136,6 +136,7 @@ pub fn small_size(zoom:u32) -> f64 {
 
 pub fn highway_size(zoom:u32) -> (f64,f64) {
     match zoom {
+        15 => return (16.0,30.0),
         14 => return (10.0,20.0),
         13 => return (8.0,16.0),
         12 => return (7.0,12.0),
@@ -169,7 +170,6 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 geom_to_path(&feature.geometry,layer.extent, &mut path);
                 rc.fill(path, &dark_gray);
             }
-
         }
     }
 
