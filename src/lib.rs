@@ -12,6 +12,7 @@ use vector_tile::Tile;
 use crate::vector_tile::mod_Tile::GeomType;
 
 use std::borrow::Cow;
+#[macro_use]
 
 extern crate log;
 
@@ -108,10 +109,19 @@ fn tagmatch(layer:&vector_tile::mod_Tile::Layer,feature:&vector_tile::mod_Tile::
     return false;
 }
 
-fn tagget<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<&'l Cow<'l,str>> {
+fn taggetstr<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<&'l Cow<'l,str>> {
     for x in (0..feature.tags.len()).step_by(2) {
         if layer.keys[feature.tags[x] as usize] == key {
             return layer.values[feature.tags[x+1] as usize].string_value.as_ref();
+        }
+    }
+    return None;
+}
+
+fn taggetint<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<i64> {
+    for x in (0..feature.tags.len()).step_by(2) {
+        if layer.keys[feature.tags[x] as usize] == key {
+            return layer.values[feature.tags[x+1] as usize].int_value;
         }
     }
     return None;
@@ -124,10 +134,22 @@ pub fn small_size(zoom:u32) -> f64 {
     return 36.0;
 }
 
+pub fn highway_size(zoom:u32) -> (f64,f64) {
+    match zoom {
+        14 => return (10.0,20.0),
+        13 => return (8.0,16.0),
+        12 => return (7.0,12.0),
+        9..=11 => return (5.0,10.0),
+        6..=8 => return (4.0,8.0),
+        _ => return (1.0,0.0)
+    }
+}
+
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     rc.clear(Color::BLACK);
     let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
+    let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
     let dark_gray = rc.solid_brush(Color::rgba8(0x11, 0x11, 0x11, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
 
@@ -152,16 +174,38 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     }
 
     // draw stroked
+    let mut rds = Vec::new();
+
+    // get the road features in order
     for layer in &tile.layers {
+        if layer.name != "roads" {
+            continue;
+        }
         for feature in &layer.features {
             if feature.type_pb != GeomType::LINESTRING {
                 continue
             }
-            let mut path = BezPath::new();
-            geom_to_path(&feature.geometry,layer.extent,&mut path);
-            rc.stroke(&path, &mid_gray, 5.0);
+            let kind_val = taggetstr(layer,feature,"kind");
+            let sort_rank = taggetint(layer,feature,"sort_rank");
+            if kind_val.is_some() && kind_val.unwrap() == "highway" {
+                rds.push((&feature.geometry,sort_rank.unwrap()));
+            } else {
+                let mut path = BezPath::new();
+                geom_to_path(&feature.geometry,layer.extent,&mut path);
+                rc.stroke(&path, &mid_gray, 1.0);
+            }
         }
     };
+
+    rds.sort_by_key(|r| r.1);
+
+    for rd in rds {
+        let mut path = BezPath::new();
+        geom_to_path(&rd.0,8192,&mut path);
+        let size = highway_size(zoom);
+        rc.stroke(&path, &black, size.1);
+        rc.stroke(&path, &mid_gray, size.0);
+    }
 
     // draw buildings
     for layer in &tile.layers {
@@ -192,10 +236,9 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             let cursor_x = de_zig_zag(layer.extent,feature.geometry[1]);
             let cursor_y = de_zig_zag(layer.extent,feature.geometry[2]);
 
+            let nam = taggetstr(layer,feature,"name");
 
-            let nam = tagget(layer,feature,"name");
-
-            let kind_val = tagget(layer,feature,"kind");
+            let kind_val = taggetstr(layer,feature,"kind");
             if nam.is_some() {
                 if kind_val.is_some() && kind_val.unwrap() == "country" {
                     let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
