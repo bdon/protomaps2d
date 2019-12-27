@@ -11,7 +11,8 @@ mod vector_tile;
 use vector_tile::Tile;
 use crate::vector_tile::mod_Tile::GeomType;
 
-#[macro_use]
+use std::borrow::Cow;
+
 extern crate log;
 
 fn de_zig_zag(param_e: u32, param_u: u32) -> f64 {
@@ -95,13 +96,40 @@ fn geom_to_path(geometry:&Vec<u32>, extent:u32, path:&mut BezPath) {
     }
 }
 
+fn tagmatch(layer:&vector_tile::mod_Tile::Layer,feature:&vector_tile::mod_Tile::Feature,key:&str,value:&str) -> bool {
+    for x in (0..feature.tags.len()).step_by(2) {
+        if layer.keys[feature.tags[x] as usize] == key {
+            let val = layer.values[feature.tags[x+1] as usize].string_value.as_ref();
+            if val.is_some() && val.unwrap() == value {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+fn tagget<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<&'l Cow<'l,str>> {
+    for x in (0..feature.tags.len()).step_by(2) {
+        if layer.keys[feature.tags[x] as usize] == key {
+            return layer.values[feature.tags[x+1] as usize].string_value.as_ref();
+        }
+    }
+    return None;
+}
+
+pub fn small_size(zoom:u32) -> f64 {
+    if zoom < 8 {
+        return 24.0;
+    }
+    return 36.0;
+}
+
+
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     rc.clear(Color::BLACK);
-    let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
     let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let dark_gray = rc.solid_brush(Color::rgba8(0x11, 0x11, 0x11, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
-    let near_white = rc.solid_brush(Color::rgba8(0x77, 0x77, 0x77, 0xFF));
 
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
@@ -150,8 +178,12 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     }
 
     let mut collider = Collider{bboxes:Vec::new()};
-    let font_size = 22.0;
-    let font = rc.text().new_font_by_name("Helvetica", font_size).build().unwrap();
+    let font_size_big = 48.0;
+    let font_big = rc.text().new_font_by_name("Helvetica", font_size_big).build().unwrap();
+
+    let font_size_small = small_size(zoom);
+    let font_small = rc.text().new_font_by_name("Helvetica", font_size_small).build().unwrap();
+
     for layer in &tile.layers {
         if layer.name != "places" {
             continue
@@ -160,20 +192,32 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             let cursor_x = de_zig_zag(layer.extent,feature.geometry[1]);
             let cursor_y = de_zig_zag(layer.extent,feature.geometry[2]);
 
-            for x in (0..feature.tags.len()).step_by(2) {
-                if layer.keys[feature.tags[x] as usize] == "name" {
-                    let name = layer.values[feature.tags[x+1] as usize].string_value.as_ref().unwrap();
-                    let layout = rc.text().new_text_layout(&font, &name).build().unwrap();
 
-                    if (cursor_y-font_size < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
+            let nam = tagget(layer,feature,"name");
+
+            let kind_val = tagget(layer,feature,"kind");
+            if nam.is_some() {
+                if kind_val.is_some() && kind_val.unwrap() == "country" {
+                    let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
+                    if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
                         continue;
                     }
-                    if !collider.add((cursor_x,cursor_y-font_size),(cursor_x+layout.width(),cursor_y)) {
+                    if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
                         continue;
                     }
-                    rc.stroke_text(&layout, (cursor_x,cursor_y), &black, 8.0);
+                    rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &white);
+                } else if kind_val.is_some() && kind_val.unwrap() == "locality" {
+                    let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
+                    if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                        continue;
+                    }
+                    if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
+                        continue;
+                    }
                     rc.draw_text(&layout, (cursor_x,cursor_y), &white);
                 }
+
+
             }
         }
     } 
