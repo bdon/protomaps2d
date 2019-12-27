@@ -148,16 +148,34 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
-    rc.clear(Color::BLACK);
-    let white = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
-    let black = rc.solid_brush(Color::rgba8(0x00, 0x00, 0x00, 0xFF));
-    let dark_gray = rc.solid_brush(Color::rgba8(0x11, 0x11, 0x11, 0xFF));
+    rc.clear(Color::rgba8(0xF2,0xEF,0xE9,0xFF));
+    let park = rc.solid_brush(Color::rgba8(0xC8, 0xFA, 0xCC, 0xFF));
+    let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
+    let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
+
+    let road_0 = rc.solid_brush(Color::rgba8(0xE8,0x92,0xA2,0xFF));
+    let road_0_buf = rc.solid_brush(Color::rgba8(0xE4,0x6B,0x8D,0xFF));
+    let water = rc.solid_brush(Color::rgba8(0xAA,0xD3,0xDF,0xFF));
+    let buildings = rc.solid_brush(Color::rgba8(0xD9,0xD0,0xC9,0xFF));
 
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
 
     // preprocess tile into a thing with hashmaps for lookup
+
+    for layer in &tile.layers {
+        if layer.name == "landuse" {
+            for feature in &layer.features {
+                if feature.type_pb != GeomType::POLYGON {
+                    continue
+                }
+                let mut path = BezPath::new();
+                geom_to_path(&feature.geometry,layer.extent, &mut path);
+                rc.fill(path, &park);
+            }
+        }
+    }
 
     // draw water polygons
     for layer in &tile.layers {
@@ -168,7 +186,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 }
                 let mut path = BezPath::new();
                 geom_to_path(&feature.geometry,layer.extent, &mut path);
-                rc.fill(path, &dark_gray);
+                rc.fill(path, &water);
             }
         }
     }
@@ -187,6 +205,10 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             }
             let kind_val = taggetstr(layer,feature,"kind");
             let sort_rank = taggetint(layer,feature,"sort_rank");
+            if kind_val.is_some() && kind_val.unwrap() == "ferry" {
+                continue
+            }
+
             if kind_val.is_some() && kind_val.unwrap() == "highway" {
                 rds.push((&feature.geometry,sort_rank.unwrap()));
             } else {
@@ -203,8 +225,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
         let mut path = BezPath::new();
         geom_to_path(&rd.0,8192,&mut path);
         let size = highway_size(zoom);
-        rc.stroke(&path, &black, size.1);
-        rc.stroke(&path, &mid_gray, size.0);
+        rc.stroke(&path, &road_0_buf, size.1);
+        rc.stroke(&path, &road_0, size.0);
     }
 
     // draw buildings
@@ -216,7 +238,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 }
                 let mut path = BezPath::new();
                 geom_to_path(&feature.geometry,layer.extent,&mut path);
-                rc.fill(path, &mid_gray);
+                rc.fill(path, &buildings);
             }
         }
     }
@@ -248,7 +270,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                     if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
                         continue;
                     }
-                    rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &white);
+                    rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,8.0);
+                    rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
                 } else if kind_val.is_some() && kind_val.unwrap() == "locality" {
                     let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
                     if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
@@ -257,7 +280,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                     if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
                         continue;
                     }
-                    rc.draw_text(&layout, (cursor_x,cursor_y), &white);
+                    rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
+                    rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                 }
 
 
