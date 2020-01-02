@@ -11,6 +11,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let vector_tile = &args[1];
     let output_file = &args[2];
+    let zoom = &args[3];
     println!("Input {}", vector_tile);
 
     let surface = ImageSurface::create(Format::ARgb32, 1024, 1024)
@@ -21,7 +22,7 @@ fn main() {
 
 
     let bytes = fs::read(vector_tile);
-    render_tile(&mut piet_context,&bytes.unwrap());
+    render_tile(&mut piet_context,&bytes.unwrap(),zoom.parse::<u32>().unwrap());
 
     piet_context.finish().unwrap();
     surface.flush();

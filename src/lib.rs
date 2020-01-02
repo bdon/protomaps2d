@@ -11,6 +11,8 @@ mod vector_tile;
 use vector_tile::Tile;
 use crate::vector_tile::mod_Tile::GeomType;
 
+pub mod label;
+
 use std::borrow::Cow;
 #[macro_use]
 
@@ -20,39 +22,6 @@ fn de_zig_zag(param_e: u32, param_u: u32) -> f64 {
     let param = param_u as i32;
     let extent = (param_e / 2048) as f64;
     return ((param >> 1) ^ (-1 * (param & 1))) as f64 / extent;
-}
-
-// a very primitive label collider,
-// that does a linear search over drawn labels,
-// rejecting any that intersect.
-pub struct Collider {
-    pub bboxes:Vec<((f64, f64),(f64, f64))>
-}
-
-impl Collider {
-    pub fn add(&mut self, topleft: (f64, f64), bottomright: (f64, f64)) -> bool {
-        for bbox in &self.bboxes {
-            // x axis
-            if bottomright.0 < (bbox.0).0 {
-                continue
-            }
-            if topleft.0 > (bbox.1).0 {
-                continue
-            }
-
-            // y axis
-            if bottomright.1 < (bbox.0).1 {
-                continue
-            }
-            if topleft.1 > (bbox.1).1 {
-                continue
-            }
-
-            return false;
-        } 
-        self.bboxes.push((topleft,bottomright));
-        return true;
-    }
 }
 
 fn geom_to_path(geometry:&Vec<u32>, extent:u32, path:&mut BezPath) {
@@ -243,7 +212,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
         }
     }
 
-    let mut collider = Collider{bboxes:Vec::new()};
+    let mut collider = label::Collider{bboxes:Vec::new()};
     let font_size_big = 48.0;
     let font_big = rc.text().new_font_by_name("Helvetica", font_size_big).build().unwrap();
 
