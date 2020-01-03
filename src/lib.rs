@@ -24,7 +24,8 @@ fn de_zig_zag(param_e: u32, param_u: u32) -> f64 {
     return ((param >> 1) ^ (-1 * (param & 1))) as f64 / extent;
 }
 
-fn geom_to_path(geometry:&Vec<u32>, extent:u32, path:&mut BezPath) {
+fn geom_to_path(geometry:&Vec<u32>, extent:u32) -> BezPath {
+    let mut path = BezPath::new();
     let cmd_len = geometry.len();
     let mut pos = 0;
     let mut cursor_x = 0.0;
@@ -64,6 +65,7 @@ fn geom_to_path(geometry:&Vec<u32>, extent:u32, path:&mut BezPath) {
         }
         pos+=1;
     }
+    return path;
 }
 
 fn tagmatch(layer:&vector_tile::mod_Tile::Layer,feature:&vector_tile::mod_Tile::Feature,key:&str,value:&str) -> bool {
@@ -139,9 +141,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,layer.extent, &mut path);
-                rc.fill(path, &park);
+                rc.fill(geom_to_path(&feature.geometry,layer.extent), &park);
             }
         }
     }
@@ -153,9 +153,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,layer.extent, &mut path);
-                rc.fill(path, &water);
+                rc.fill(geom_to_path(&feature.geometry,layer.extent), &water);
             }
         }
     }
@@ -181,9 +179,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             if kind_val.is_some() && kind_val.unwrap() == "highway" {
                 rds.push((&feature.geometry,sort_rank.unwrap()));
             } else {
-                let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,layer.extent,&mut path);
-                rc.stroke(&path, &mid_gray, 1.0);
+                rc.stroke(geom_to_path(&feature.geometry,layer.extent), &mid_gray, 1.0);
             }
         }
     };
@@ -191,8 +187,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     rds.sort_by_key(|r| r.1);
 
     for rd in rds {
-        let mut path = BezPath::new();
-        geom_to_path(&rd.0,8192,&mut path);
+        let path = geom_to_path(&rd.0,8192);
         let size = highway_size(zoom);
         rc.stroke(&path, &road_0_buf, size.1);
         rc.stroke(&path, &road_0, size.0);
@@ -205,9 +200,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                let mut path = BezPath::new();
-                geom_to_path(&feature.geometry,layer.extent,&mut path);
-                rc.fill(path, &buildings);
+                rc.fill(geom_to_path(&feature.geometry,layer.extent), &buildings);
             }
         }
     }
@@ -252,8 +245,6 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                     rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
                     rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                 }
-
-
             }
         }
     } 
