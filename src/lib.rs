@@ -7,45 +7,13 @@ use quick_protobuf::{MessageRead, BytesReader};
 
 mod vector_tile;
 use vector_tile::vector_tile::Tile;
-use crate::vector_tile::vector_tile::mod_Tile::{GeomType,Layer,Feature};
+use crate::vector_tile::vector_tile::mod_Tile::{GeomType};
 
 pub mod label;
 pub mod draw;
-
-use std::borrow::Cow;
-#[macro_use]
+pub mod tile;
 
 extern crate log;
-
-fn tagmatch(layer:&Layer,feature:&Feature,key:&str,value:&str) -> bool {
-    for x in (0..feature.tags.len()).step_by(2) {
-        if layer.keys[feature.tags[x] as usize] == key {
-            let val = layer.values[feature.tags[x+1] as usize].string_value.as_ref();
-            if val.is_some() && val.unwrap() == value {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-pub fn taggetstr<'l,'f>(layer:&'l Layer,feature:&'f Feature,key:&str) -> Option<&'l Cow<'l,str>> {
-    for x in (0..feature.tags.len()).step_by(2) {
-        if layer.keys[feature.tags[x] as usize] == key {
-            return layer.values[feature.tags[x+1] as usize].string_value.as_ref();
-        }
-    }
-    return None;
-}
-
-pub fn taggetint<'l,'f>(layer:&'l Layer,feature:&'f Feature,key:&str) -> Option<i64> {
-    for x in (0..feature.tags.len()).step_by(2) {
-        if layer.keys[feature.tags[x] as usize] == key {
-            return layer.values[feature.tags[x+1] as usize].int_value;
-        }
-    }
-    return None;
-}
 
 pub fn small_size(zoom:u32) -> f64 {
     if zoom < 8 {
@@ -168,9 +136,9 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
             let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
 
-            let nam = taggetstr(layer,feature,"name");
+            let nam = tile::taggetstr(layer,feature,"name");
 
-            let kind_val = taggetstr(layer,feature,"kind");
+            let kind_val = tile::taggetstr(layer,feature,"kind");
             if nam.is_some() {
                 if kind_val.is_some() && kind_val.unwrap() == "country" {
                     let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
