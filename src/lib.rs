@@ -1,4 +1,3 @@
-
 use piet::{
     Color, FontBuilder, RenderContext, Text, TextLayoutBuilder, TextLayout
 };
@@ -7,8 +6,8 @@ extern crate quick_protobuf;
 use quick_protobuf::{MessageRead, BytesReader};
 
 mod vector_tile;
-use vector_tile::Tile;
-use crate::vector_tile::mod_Tile::GeomType;
+use vector_tile::vector_tile::Tile;
+use crate::vector_tile::vector_tile::mod_Tile::{GeomType,Layer,Feature};
 
 pub mod label;
 pub mod draw;
@@ -18,7 +17,7 @@ use std::borrow::Cow;
 
 extern crate log;
 
-fn tagmatch(layer:&vector_tile::mod_Tile::Layer,feature:&vector_tile::mod_Tile::Feature,key:&str,value:&str) -> bool {
+fn tagmatch(layer:&Layer,feature:&Feature,key:&str,value:&str) -> bool {
     for x in (0..feature.tags.len()).step_by(2) {
         if layer.keys[feature.tags[x] as usize] == key {
             let val = layer.values[feature.tags[x+1] as usize].string_value.as_ref();
@@ -30,7 +29,7 @@ fn tagmatch(layer:&vector_tile::mod_Tile::Layer,feature:&vector_tile::mod_Tile::
     return false;
 }
 
-fn taggetstr<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<&'l Cow<'l,str>> {
+pub fn taggetstr<'l,'f>(layer:&'l Layer,feature:&'f Feature,key:&str) -> Option<&'l Cow<'l,str>> {
     for x in (0..feature.tags.len()).step_by(2) {
         if layer.keys[feature.tags[x] as usize] == key {
             return layer.values[feature.tags[x+1] as usize].string_value.as_ref();
@@ -39,7 +38,7 @@ fn taggetstr<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_ti
     return None;
 }
 
-fn taggetint<'l,'f>(layer:&'l vector_tile::mod_Tile::Layer,feature:&'f vector_tile::mod_Tile::Feature,key:&str) -> Option<i64> {
+pub fn taggetint<'l,'f>(layer:&'l Layer,feature:&'f Feature,key:&str) -> Option<i64> {
     for x in (0..feature.tags.len()).step_by(2) {
         if layer.keys[feature.tags[x] as usize] == key {
             return layer.values[feature.tags[x+1] as usize].int_value;
@@ -67,18 +66,18 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
     }
 }
 
-
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
-    rc.clear(Color::rgba8(0xF2,0xEF,0xE9,0xFF));
-    let park = rc.solid_brush(Color::rgba8(0xC8, 0xFA, 0xCC, 0xFF));
+    rc.clear(Color::rgba8(0xFF,0xFC,0xEB,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
 
     let road_0 = rc.solid_brush(Color::rgba8(0xE8,0x92,0xA2,0xFF));
     let road_0_buf = rc.solid_brush(Color::rgba8(0xE4,0x6B,0x8D,0xFF));
-    let water = rc.solid_brush(Color::rgba8(0xAA,0xD3,0xDF,0xFF));
-    let buildings = rc.solid_brush(Color::rgba8(0xD9,0xD0,0xC9,0xFF));
+
+    let park = rc.solid_brush(Color::rgba8(0xD2, 0xFE, 0xC6, 0xFF));
+    let water = rc.solid_brush(Color::rgba8(0xCD,0xEC,0xFF,0xFF));
+    let buildings = rc.solid_brush(Color::rgba8(0xCC,0xCC,0xCC,0xFF));
 
     let mut reader = BytesReader::from_bytes(&buf);
     let tile = Tile::from_reader(&mut reader, &buf).expect("Cannot read Tile");
