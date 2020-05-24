@@ -42,8 +42,12 @@
             L.control.zoom().addTo(map);
 
 
+            const font = new FontFace("Inter","url(https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2)")
             async function run() {
                 await init()
+                await font.load()
+                document.fonts.add(font)
+
                 var CanvasLayer = L.GridLayer.extend({
                     createTile: function(coords,done){
                         var error
@@ -53,17 +57,24 @@
                         this.renderedTiles = this.renderedTiles + 1
                         tile.width = 2048
                         tile.height = 2048
+                        tile.deleted = false
 
                         var api_key = ""
-                        var tile_url = `https://a.tile.nextzen.org/tilezen/vector/v1/512/all/${coords.z}/${coords.x}/${coords.y}.mvt?api_key=${api_key}`
+                        var tile_url = `https://api.protomaps.com/tiles/v1/${coords.z}/${coords.x}/${coords.y}.pbf?key=${api_key}`
 
-                        fetch(tile_url).then(resp => {
-                            return resp.arrayBuffer()
-                        }).then(buf => {
-                            var arr = new Uint8Array(buf)
-                            wasm_render_tile(tile.id,arr,coords.z)
-                            done(error,tile)
-                        })
+                        setTimeout(() => {
+                            if (tile.deleted) return
+
+                            fetch(tile_url).then(resp => {
+                                return resp.arrayBuffer()
+                            }).then(buf => {
+                                if (tile.deleted) return
+                                var arr = new Uint8Array(buf)
+                                wasm_render_tile(tile.id,arr,coords.z)
+                                done(error,tile)
+                            })
+
+                        },200)
 
                         return tile
                     },
@@ -73,6 +84,7 @@
                         if (!tile) { return }
                         tile.el.width = 0
                         tile.el.height = 0
+                        tile.el.deleted = true
                         L.DomUtil.remove(tile.el)
                         delete this._tiles[key]
                         this.fire('tileunload', {
@@ -81,9 +93,10 @@
                         })
                     },
                 })
-                var c = new CanvasLayer({tileSize:tile_size,attribution: 'Map Tiles &copy; Nextzen; &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:15,detectRetina:true})
+                var c = new CanvasLayer({tileSize:tile_size,attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:14,detectRetina:true})
                 c.addTo(map)
             }
+
             run()
         </script>
     </body>
