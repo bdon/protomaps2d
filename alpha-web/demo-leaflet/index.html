@@ -11,34 +11,13 @@
         <style>
             html, body, #map {
                 height:100%;
-                background: black;
-            }
-            .leaflet-container {
-                background: black;
-            }
-
-            .leaflet-touch .leaflet-control-attribution {
-                background-color: black;
-                color: #666;
-            }
-
-            .leaflet-bar a, .leaflet-bar a:hover {
-                background-color:#001B44;
-                color:#A463F2;
-                border-bottom:1px solid #A463F2;
-            }
-
-            .leaflet-bar a.leaflet-disabled {
-                background-color:black;
+                background: #eee;
             }
         </style>
     </head>
     <body class="flex sans-serif">
         <div class="flex flex-column flex-grow-1">
             <div class="w-100" id="map"></div>
-            <div class="pa3 bg-navy light-purple">
-               <a class="light-purple" href="https://github.com/protomaps/Alpha" target="_blank">α on GitHub</a>
-            </div>
         </div>
         <script type="module">
             import init, { wasm_render_tile } from './protomaps_alpha_web.js'
@@ -55,12 +34,13 @@
             })
 
             var map = L.map('map',{crs:myCrs,zoomControl:false})
-            map.setView([0,0], 1)
             var hash = new L.Hash(map)
+            if(!location.hash) {
+                map.setView([0,0], 1)
+            }
 
-            L.control.zoom({
-                position: 'bottomleft'
-            }).addTo(map);
+            L.control.zoom().addTo(map);
+
 
             async function run() {
                 await init()
