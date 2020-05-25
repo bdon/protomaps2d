@@ -1,102 +1,39 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>α Leaflet</title>
+        <title>protomaps.rs</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"></link>
-        <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"></link>
-        <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
-        <script src="leaflet-hash.js"></script>
+        <link rel="stylesheet" href="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.css"></link>
+        <script src="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.js"></script>
+        <script src="https://cdn.protomaps.com/leaflet-hash/leaflet-hash.js"></script>
         <style>
             html, body, #map {
                 height:100%;
                 background: #eee;
+                margin: 0px;
             }
         </style>
     </head>
-    <body class="flex sans-serif">
-        <div class="flex flex-column flex-grow-1">
-            <div class="w-100" id="map"></div>
-        </div>
+    <body>
+        <div id="map"></div>
         <script type="module">
-            import init, { wasm_render_tile } from './protomaps_alpha_web.js'
+            import { RSinit, crs, RSLayer } from './protomaps-rs.js'
 
-            var ratio = window.devicePixelRatio
-            const tile_size = 2048/ratio
-            var myCrs = L.extend({}, L.CRS.EPSG3857, {
-                scale:function (zoom) {
-                   return tile_size * Math.pow(2,zoom)
-                },
-                zoom :function(scale) {
-                    return Math.log(scale / tile_size) / Math.LN2
-                }
+            const key = ""
+            const map = L.map('map',{crs:crs})
+            const hash = new L.Hash(map)
+            if(!location.hash) map.setView([0,0], 1)
+
+            const fonts = [["Inter","https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2"]]
+
+            RSinit(fonts).then(() => {
+                new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`,{
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    style:{labels:true},
+                    maxZoom:14
+                }).addTo(map)
             })
-
-            var map = L.map('map',{crs:myCrs,zoomControl:false})
-            var hash = new L.Hash(map)
-            if(!location.hash) {
-                map.setView([0,0], 1)
-            }
-
-            L.control.zoom().addTo(map);
-
-
-            const font = new FontFace("Inter","url(https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2)")
-            async function run() {
-                await init()
-                await font.load()
-                document.fonts.add(font)
-
-                var CanvasLayer = L.GridLayer.extend({
-                    createTile: function(coords,done){
-                        var error
-                        var tile = L.DomUtil.create('canvas', 'leaflet-tile')
-                        if (!this.renderedTiles) this.renderedTiles = 0
-                        tile.id = "pmap_alpha_" + this.renderedTiles
-                        this.renderedTiles = this.renderedTiles + 1
-                        tile.width = 2048
-                        tile.height = 2048
-                        tile.deleted = false
-
-                        var api_key = ""
-                        var tile_url = `https://api.protomaps.com/tiles/v1/${coords.z}/${coords.x}/${coords.y}.pbf?key=${api_key}`
-
-                        setTimeout(() => {
-                            if (tile.deleted) return
-
-                            fetch(tile_url).then(resp => {
-                                return resp.arrayBuffer()
-                            }).then(buf => {
-                                if (tile.deleted) return
-                                var arr = new Uint8Array(buf)
-                                var result = wasm_render_tile(tile.id,arr,coords.z,{labels:true})
-                                console.log(result)
-                                done(error,tile)
-                            })
-                        },200)
-                        return tile
-                    },
-
-                    _removeTile: function (key) {
-                        var tile = this._tiles[key]
-                        if (!tile) { return }
-                        tile.el.width = 0
-                        tile.el.height = 0
-                        tile.el.deleted = true
-                        L.DomUtil.remove(tile.el)
-                        delete this._tiles[key]
-                        this.fire('tileunload', {
-                            tile: tile.el,
-                            coords: this._keyToTileCoords(key)
-                        })
-                    },
-                })
-                var c = new CanvasLayer({tileSize:tile_size,attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:14,detectRetina:true})
-                c.addTo(map)
-            }
-
-            run()
         </script>
     </body>
 </html>
