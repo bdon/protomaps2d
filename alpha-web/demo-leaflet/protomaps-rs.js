@@ -29,6 +29,13 @@ const RSLayer = L.GridLayer.extend({
         this.renderedTiles = 0
     },
 
+    rerender: function() {
+        for (let [k,v] of Object.entries(this._tiles)) {
+            const coords = v.coords
+            var result = wasm_render_tile(v.el.id,v.el.arr,coords.z,this.style)
+        }
+    },
+
     createTile: function(coords,done){
         var error
         var tile = L.DomUtil.create('canvas', 'leaflet-tile')
@@ -39,6 +46,7 @@ const RSLayer = L.GridLayer.extend({
         tile.height = 2048
 
         var tile_url = this.tile_url.replace("{z}",coords.z).replace("{x}",coords.x).replace("{y}",coords.y)
+        tile.url = tile_url
 
         setTimeout(() => {
             if (tile.deleted) return
@@ -47,6 +55,7 @@ const RSLayer = L.GridLayer.extend({
             }).then(buf => {
                 if (tile.deleted) return
                 var arr = new Uint8Array(buf)
+                tile.arr = arr
                 var result = wasm_render_tile(tile.id,arr,coords.z,this.style)
                 done(error,tile)
             })

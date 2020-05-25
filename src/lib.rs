@@ -20,7 +20,8 @@ extern crate serde_derive;
 
 #[derive(Deserialize)]
 pub struct Style {
-    pub labels: bool
+    pub labels: bool,
+    pub name: String
 }
 
 #[derive(Serialize)]
@@ -152,7 +153,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
                 let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
 
-                let nam = tile::taggetstr(layer,feature,"name");
+                let nam = tile::taggetstr(layer,feature,&style.name);
 
                 let kind_val = tile::taggetstr(layer,feature,"place");
                 if nam.is_some() {

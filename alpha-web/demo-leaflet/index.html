@@ -5,18 +5,36 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.css"></link>
+        <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
         <script src="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.js"></script>
         <script src="https://cdn.protomaps.com/leaflet-hash/leaflet-hash.js"></script>
-        <style>
-            html, body, #map {
-                height:100%;
-                background: #eee;
-                margin: 0px;
-            }
-        </style>
     </head>
-    <body>
-        <div id="map"></div>
+    <body class="vh-100 ma0 bg-light-gray sans-serif">
+        <div class="absolute bg-white bottom-0 left-0 ma2 pa3 w5 z-9999 f7">
+            <div class="flex">
+                <div class="w-50">
+                    Labels
+                </div>
+                <div class="w-50">
+                    <input type="checkbox" id="labels" checked></input>
+                </div>
+            </div>
+            <div class="flex mt2">
+                <div class="w-50">
+                    Language
+                </div>
+                <div class="w-50">
+                    <select id="lang">
+                        <option value="name">Default (local)</option>
+                        <option value="name:en">English</option>
+                        <option value="name:zh">Chinese</option>
+                        <option value="name:ja">Japanese</option>
+                        <option value="name:de">German</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div id="map" class="h-100"></div>
         <script type="module">
             import { RSinit, crs, RSLayer } from './protomaps-rs.js'
 
@@ -28,12 +46,25 @@
             const fonts = [["Inter","https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2"]]
 
             RSinit(fonts).then(() => {
-                new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`,{
+                const layer = new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`,{
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                    style:{labels:true},
+                    style:{labels:true,name:"name"},
                     maxZoom:14
-                }).addTo(map)
+                })
+                layer.addTo(map)
+
+                document.getElementById('labels').addEventListener("change", e => {
+                    layer.style.labels = e.target.checked
+                    layer.rerender()
+                })
+
+                document.getElementById('lang').addEventListener("change", e => {
+                    layer.style.name = e.target.value
+                    layer.rerender()
+                })
             })
+
+
         </script>
     </body>
 </html>
