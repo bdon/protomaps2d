@@ -15,6 +15,19 @@ pub mod tile;
 
 extern crate log;
 
+#[macro_use]
+extern crate serde_derive;
+
+#[derive(Deserialize)]
+pub struct Style {
+    pub labels: bool
+}
+
+#[derive(Serialize)]
+pub struct Result {
+    pub feature_count: u64
+}
+
 pub fn small_size(zoom:u32) -> f64 {
     if zoom < 8 {
         return 30.0;
@@ -34,7 +47,7 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
     }
 }
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
+pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Style) -> Result {
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
@@ -85,8 +98,6 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
         }
     }
 
-    // draw stroked
-    let mut rds = Vec::new();
 
     // get the road features in order
     for layer in &tile.layers {
@@ -97,27 +108,10 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
             if feature.type_pb != GeomType::LINESTRING {
                 continue
             }
-            let kind_val = tile::taggetstr(layer,feature,"kind");
-            let sort_rank = tile::taggetint(layer,feature,"sort_rank");
-            if kind_val.is_some() && kind_val.unwrap() == "ferry" {
-                continue
-            }
 
-            if kind_val.is_some() && kind_val.unwrap() == "highway" {
-                rds.push((&feature.geometry,sort_rank.unwrap()));
-            } else {
-                rc.stroke(draw::path(&feature.geometry,layer.extent), &road_0, 1.0);
-            }
+            rc.stroke(draw::path(&feature.geometry,layer.extent), &road_0, 1.0);
         }
     };
-
-    rds.sort_by_key(|r| r.1);
-
-    for rd in rds {
-        let path = draw::path(&rd.0,8192);
-        let size = highway_size(zoom);
-        rc.stroke(&path, &road_0, size.0);
-    }
 
     for layer in &tile.layers {
         if layer.name == "buildings" {
@@ -148,19 +142,66 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
     let font_size_small = small_size(zoom);
     let font_small = rc.text().new_font_by_name("Inter", font_size_small).build().unwrap();
 
-    for layer in &tile.layers {
-        if layer.name != "places" {
-            continue
-        }
-        for feature in &layer.features {
-            let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
-            let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
+    if style.labels == true {
 
-            let nam = tile::taggetstr(layer,feature,"name");
+        for layer in &tile.layers {
+            if layer.name != "places" {
+                continue
+            }
+            for feature in &layer.features {
+                let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
+                let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
 
-            let kind_val = tile::taggetstr(layer,feature,"place");
-            if nam.is_some() {
-                if kind_val.is_some() && kind_val.unwrap() == "country" {
+                let nam = tile::taggetstr(layer,feature,"name");
+
+                let kind_val = tile::taggetstr(layer,feature,"place");
+                if nam.is_some() {
+                    if kind_val.is_some() && kind_val.unwrap() == "country" {
+                        let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
+                        if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                            continue;
+                        }
+                        if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
+                            continue;
+                        }
+                        rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,8.0);
+                        rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
+                    } else if kind_val.is_some() && kind_val.unwrap() == "city" {
+                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
+                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                            continue;
+                        }
+                        if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
+                            continue;
+                        }
+                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
+                        rc.draw_text(&layout, (cursor_x,cursor_y), &text);
+                    } else {
+                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
+                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                            continue;
+                        }
+                        if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
+                            continue;
+                        }
+                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
+                        rc.draw_text(&layout, (cursor_x,cursor_y), &text);
+                    }
+                }
+            }
+        } 
+
+        for layer in &tile.layers {
+            if layer.name != "poi" {
+                continue
+            }
+            for feature in &layer.features {
+                let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
+                let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
+
+                let nam = tile::taggetstr(layer,feature,"name");
+
+                if nam.is_some() {
                     let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
                     if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
                         continue;
@@ -168,44 +209,13 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32) {
                     if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
                         continue;
                     }
-                    rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,8.0);
+                    rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,4.0);
                     rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
-                } else if kind_val.is_some() && kind_val.unwrap() == "city" {
-                    let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
-                    if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
-                        continue;
-                    }
-                    if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
-                        continue;
-                    }
-                    rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
-                    rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                 }
             }
-        }
-    } 
+        } 
+    }
 
-    for layer in &tile.layers {
-        if layer.name != "poi" {
-            continue
-        }
-        for feature in &layer.features {
-            let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
-            let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
-
-            let nam = tile::taggetstr(layer,feature,"name");
-
-            if nam.is_some() {
-                let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
-                if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
-                    continue;
-                }
-                if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
-                    continue;
-                }
-                rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,4.0);
-                rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
-            }
-        }
-    } 
+    let result = Result{feature_count:1};
+    return result;
 }

@@ -70,12 +70,11 @@
                             }).then(buf => {
                                 if (tile.deleted) return
                                 var arr = new Uint8Array(buf)
-                                wasm_render_tile(tile.id,arr,coords.z)
+                                var result = wasm_render_tile(tile.id,arr,coords.z,{labels:true})
+                                console.log(result)
                                 done(error,tile)
                             })
-
                         },200)
-
                         return tile
                     },
 
