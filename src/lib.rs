@@ -168,7 +168,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                         rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
                     } else if kind_val.is_some() && kind_val.unwrap() == "city" {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
-                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
                             continue;
                         }
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
@@ -178,7 +178,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                         rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                     } else {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
-                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
                             continue;
                         }
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
