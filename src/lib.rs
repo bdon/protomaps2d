@@ -51,7 +51,7 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 }
 
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,logger:&dyn Fn(&String)) -> Result {
+pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,_logger:&dyn Fn(&String)) -> Result {
     rc.save();
     rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));

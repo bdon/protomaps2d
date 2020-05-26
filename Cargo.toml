@@ -12,10 +12,10 @@ categories = ["graphics"]
 
 [dependencies]
 piet = { git = "https://github.com/bdon/piet", branch = "stroke_text" }
-quick-protobuf = "0.6.2"
+quick-protobuf = "^0.6"
 log = "0.4.8"
-serde = "^1.0.59"
-serde_derive = "^1.0.59"
+serde = "^1.0"
+serde_derive = "^1.0"
 
 [target.'cfg(not(any(target_arch="wasm32", target_os="windows")))'.dependencies]
 piet-cairo = { git = "https://github.com/bdon/piet", branch = "stroke_text" }
