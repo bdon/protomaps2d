@@ -3,11 +3,16 @@
     <head>
         <title>protomaps.rs</title>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.css"></link>
         <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
         <script src="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.js"></script>
         <script src="https://cdn.protomaps.com/leaflet-hash/leaflet-hash.js"></script>
+        <style>
+            .leaflet-tile {
+                border: 1px solid red;
+            }
+        </style>
     </head>
     <body class="vh-100 ma0 bg-light-gray sans-serif">
         <div class="absolute bg-white bottom-0 left-0 ma2 pa3 w5 z-9999 f7">
@@ -33,6 +38,17 @@
                     </select>
                 </div>
             </div>
+            <div class="flex mt2">
+                <div class="w-50">
+                    Font
+                </div>
+                <div class="w-50">
+                    <select id="font">
+                        <option value="serif">serif (default)</option>
+                        <option value="Inter">Inter</option>
+                    </select>
+                </div>
+            </div>
         </div>
         <div id="map" class="h-100"></div>
         <script type="module">
@@ -46,21 +62,17 @@
             const fonts = [["Inter","https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2"]]
 
             RSinit(fonts).then(() => {
-                const layer = new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`,{
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                    style:{labels:true,name:"name"},
-                    maxZoom:19
-                })
+                const layer = new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`)
                 layer.addTo(map)
 
                 document.getElementById('labels').addEventListener("change", e => {
-                    layer.style.labels = e.target.checked
-                    layer.rerender()
+                    layer.setStyle({labels:e.target.checked})
                 })
-
                 document.getElementById('lang').addEventListener("change", e => {
-                    layer.style.name = e.target.value
-                    layer.rerender()
+                    layer.setStyle({name:e.target.value})
+                })
+                document.getElementById('font').addEventListener("change", e => {
+                    layer.setStyle({font:e.target.value})
                 })
             })
         </script>

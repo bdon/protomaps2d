@@ -13,6 +13,7 @@ const crs = L.extend({}, L.CRS.EPSG3857, {
 
 const RSinit = async font_faces => {
     await init()
+    font_faces = font_faces || []
     for (var f of font_faces) {
         const font = new FontFace(f[0],`url(${f[1]})`)
         await font.load()
@@ -22,11 +23,20 @@ const RSinit = async font_faces => {
 
 const RSLayer = L.GridLayer.extend({
     initialize: function(tile_url,options) {
+        options = options || {}
+        options.attribution = options.attribution || '<a href="https://protomaps.com">Protomaps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        options.style = options.style || {labels:true,name:"name",font:"sans-serif"} 
+        options.maxZoom = options.maxZoom || 19
         options.tileSize = tile_size
         L.setOptions(this, options);
         this.style = options.style
         this.tile_url = tile_url
         this.renderedTiles = 0
+    },
+
+    setStyle: function(o) {
+        Object.assign(this.style,o)
+        this.rerender()
     },
 
     rerender: function() {

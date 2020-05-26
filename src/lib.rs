@@ -22,7 +22,8 @@ extern crate serde_derive;
 #[derive(Deserialize)]
 pub struct Style {
     pub labels: bool,
-    pub name: String
+    pub name: String,
+    pub font: String
 }
 
 #[derive(Serialize)]
@@ -50,7 +51,7 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 }
 
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,logger:&dyn Fn(String)) -> Result {
+pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,logger:&dyn Fn(&String)) -> Result {
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
@@ -70,6 +71,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
     // preprocess tile into a thing with hashmaps for lookup
 
     let x = draw::Xform{extent:4096.0,total:total,dx:dx,dy:dy};
+    rc.save();
     rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
 
     for layer in &tile.layers {
@@ -144,10 +146,10 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
 
     let mut collider = label::Collider{bboxes:Vec::new()};
     let font_size_big = 20.0;
-    let font_big = rc.text().new_font_by_name("Inter", font_size_big).build().unwrap();
+    let font_big = rc.text().new_font_by_name(&style.font, font_size_big).build().unwrap();
 
     let font_size_small = small_size(zoom);
-    let font_small = rc.text().new_font_by_name("Inter", font_size_small).build().unwrap();
+    let font_small = rc.text().new_font_by_name(&style.font, font_size_small).build().unwrap();
 
     if style.labels == true {
 
@@ -226,6 +228,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
             }
         } 
     }
+
+    rc.restore();
 
     let result = Result{feature_count:1};
     return result;

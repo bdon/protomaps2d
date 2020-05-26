@@ -48,7 +48,7 @@ pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32,total:u32,dx:u32,dy
     let mut c4 = c3.unwrap();
     let mut rc = WebRenderContext::new(&mut c4, &window);
 
-    fn logger(s: String) {
+    fn logger(s: &String) {
         console::log_1(&s.into());
     }
 
