@@ -15,8 +15,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "0.1.6"
-#piet-web = "0.0.7"
-piet-web = { path = "../../../rust/piet/piet-web" }
+piet-web = { git = "https://github.com/bdon/piet", branch = "stroke_text" }
 protomaps-alpha = { path = ".." }
 console_log = "0.1"
 
