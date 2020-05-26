@@ -1,12 +1,12 @@
 [package]
-name = "protomaps-alpha-web"
+name = "protomaps-rs"
 version = "0.0.1"
 authors = ["Brandon Liu <brandon@protomaps.com>"]
 license = "BSD"
 edition = "2018"
 keywords = ["graphics", "gis"]
-repository = "https://github.com/protomaps/alpha"
-description = "WASM target for Protomaps Alpha"
+repository = "https://github.com/protomaps/protomaps.rs"
+description = "WASM target for Protomaps RS"
 readme = "README"
 categories = ["graphics"]
 
@@ -25,5 +25,6 @@ version = "^0.2"
 features = ["serde-serialize"]
 
 [dependencies.web-sys]
-version = "0.3.10"
+version = "^0.3"
 features = ["console", "CanvasRenderingContext2d", "Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement"]
+

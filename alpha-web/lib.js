@@ -1,4 +1,4 @@
-import init, { wasm_render_tile } from './protomaps_alpha_web.js'
+import init, { wasm_render_tile } from './protomaps_rs.js'
 
 const ratio = window.devicePixelRatio
 const tile_size = 2048/ratio
@@ -58,7 +58,7 @@ const RSLayer = L.GridLayer.extend({
                 tile.arr = arr
                 var result = wasm_render_tile(tile.id,arr,coords.z,this.style)
                 done(error,tile)
-            })
+                })
         },200)
         return tile
     },
