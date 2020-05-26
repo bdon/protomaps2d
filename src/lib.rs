@@ -52,6 +52,8 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,logger:&dyn Fn(&String)) -> Result {
+    rc.save();
+    rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
@@ -71,8 +73,6 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
     // preprocess tile into a thing with hashmaps for lookup
 
     let x = draw::Xform{extent:4096.0,total:total,dx:dx,dy:dy};
-    rc.save();
-    rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
 
     for layer in &tile.layers {
         if layer.name == "landuse" {
@@ -168,7 +168,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                 let kind_val = tile::taggetstr(layer,feature,"place");
                 if nam.is_some() {
                     if kind_val.is_some() && kind_val.unwrap() == "country" {
-                        let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
+                        let layout = rc.text().new_text_layout(&font_big, &nam.unwrap(),None).build().unwrap();
                         if (logical_y-font_size_big < 0.0) || (logical_x - layout.width()/2.0 < 0.0) || (logical_x + layout.width()/2.0 > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
@@ -178,7 +178,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                         rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,8.0);
                         rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
                     } else if kind_val.is_some() && kind_val.unwrap() == "city" {
-                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
+                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap(),None).build().unwrap();
                         if (logical_y-font_size_small < 0.0) || (logical_x + layout.width() > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
@@ -188,7 +188,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                         rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
                         rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                     } else {
-                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
+                        let layout = rc.text().new_text_layout(&font_small, &nam.unwrap(),None).build().unwrap();
                         if (logical_y-font_size_small < 0.0) || (logical_x + layout.width() > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
@@ -215,7 +215,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                 let logical_y = cursor_y - 2048.0 * dy as f64;
 
                 if nam.is_some() {
-                    let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
+                    let layout = rc.text().new_text_layout(&font_big, &nam.unwrap(),None).build().unwrap();
                     if (logical_x-font_size_big < 0.0) || (logical_x - layout.width()/2.0 < 0.0) || (logical_x + layout.width()/2.0 > 2048.0) || (logical_y > 2048.0) {
                         continue;
                     }
