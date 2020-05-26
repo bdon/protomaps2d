@@ -1,21 +1,17 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window, HtmlCanvasElement};
+use web_sys::{window, HtmlCanvasElement, console};
 use piet_web::WebRenderContext;
 use protomaps_alpha::{render_tile,Style,Result};
 
 use std::panic;
 extern crate console_error_panic_hook;
-use console_log;
-
 
 #[wasm_bindgen]
-pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32, style_js:&JsValue) -> JsValue {
+pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32, style_js:&JsValue) -> JsValue {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     let style: Style = style_js.into_serde().unwrap();
-
-    console_log::init();
 
     let empty = JsValue::from_serde(&Result{feature_count:0}).unwrap();
 
@@ -52,6 +48,10 @@ pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32, style_js:&JsValue)
     let mut c4 = c3.unwrap();
     let mut rc = WebRenderContext::new(&mut c4, &window);
 
-    let result = render_tile(&mut rc,&buf,zoom,&style);
+    fn logger(s: String) {
+        console::log_1(&s.into());
+    }
+
+    let result = render_tile(&mut rc,&buf,zoom,total,dx,dy,&style,&logger);
     return JsValue::from_serde(&result).unwrap();
 }

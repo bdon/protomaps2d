@@ -49,7 +49,7 @@
                 const layer = new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`,{
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                     style:{labels:true,name:"name"},
-                    maxZoom:14
+                    maxZoom:19
                 })
                 layer.addTo(map)
 
@@ -63,8 +63,6 @@
                     layer.rerender()
                 })
             })
-
-
         </script>
     </body>
 </html>

@@ -32,7 +32,8 @@ const RSLayer = L.GridLayer.extend({
     rerender: function() {
         for (let [k,v] of Object.entries(this._tiles)) {
             const coords = v.coords
-            var result = wasm_render_tile(v.el.id,v.el.arr,coords.z,this.style)
+            const tile = v.el
+            var result = wasm_render_tile(tile.id,tile.arr,coords.z,tile.total,tile.dx,tile.dy,this.style)
         }
     },
 
@@ -45,6 +46,21 @@ const RSLayer = L.GridLayer.extend({
         tile.width = 2048
         tile.height = 2048
 
+        tile.total = 1
+        tile.dx = 0
+        tile.dy = 0
+        if (coords.z > 14) {
+            const delta_z = coords.z - 14
+            const z14_x = Math.floor(coords.x / Math.pow(2,delta_z))
+            const z14_y = Math.floor(coords.y / Math.pow(2,delta_z))
+            tile.total = Math.pow(2,delta_z)
+            tile.dx = coords.x - z14_x * tile.total
+            tile.dy = coords.y - z14_y * tile.total
+            coords.z = 14
+            coords.x = z14_x
+            coords.y = z14_y
+        }
+
         var tile_url = this.tile_url.replace("{z}",coords.z).replace("{x}",coords.x).replace("{y}",coords.y)
         tile.url = tile_url
 
@@ -56,7 +72,7 @@ const RSLayer = L.GridLayer.extend({
                 if (tile.deleted) return
                 var arr = new Uint8Array(buf)
                 tile.arr = arr
-                var result = wasm_render_tile(tile.id,arr,coords.z,this.style)
+                var result = wasm_render_tile(tile.id,arr,coords.z,tile.total,tile.dx,tile.dy,this.style)
                 done(error,tile)
                 })
         },200)

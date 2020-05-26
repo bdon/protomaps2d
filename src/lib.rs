@@ -1,6 +1,7 @@
 use piet::{
     Color, FontBuilder, RenderContext, Text, TextLayoutBuilder, TextLayout
 };
+use piet::kurbo::{ Affine,Vec2 };
 
 extern crate quick_protobuf;
 use quick_protobuf::{MessageRead, BytesReader};
@@ -48,11 +49,13 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
     }
 }
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Style) -> Result {
+
+pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,logger:&dyn Fn(String)) -> Result {
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
+
 
     let road_0 = rc.solid_brush(Color::rgba8(0xFF,0xFF,0xFF,0xFF));
     //let road_0_buf = rc.solid_brush(Color::rgba8(0xE4,0x6B,0x8D,0xFF));
@@ -66,13 +69,16 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
 
     // preprocess tile into a thing with hashmaps for lookup
 
+    let x = draw::Xform{extent:4096.0,total:total,dx:dx,dy:dy};
+    rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
+
     for layer in &tile.layers {
         if layer.name == "landuse" {
             for feature in &layer.features {
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                rc.fill(draw::path(&feature.geometry,layer.extent), &park);
+                rc.fill(draw::path(&feature.geometry,&x), &park);
             }
         }
     }
@@ -82,7 +88,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                rc.fill(draw::path(&feature.geometry,layer.extent), &park);
+                rc.fill(draw::path(&feature.geometry,&x), &park);
             }
         }
     }
@@ -94,7 +100,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                rc.fill(draw::path(&feature.geometry,layer.extent), &water);
+                rc.fill(draw::path(&feature.geometry,&x), &water);
             }
         }
     }
@@ -110,7 +116,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 continue
             }
 
-            rc.stroke(draw::path(&feature.geometry,layer.extent), &road_0, 1.0);
+            rc.stroke(draw::path(&feature.geometry,&x), &road_0, 1.0);
         }
     };
 
@@ -120,7 +126,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 if feature.type_pb != GeomType::POLYGON {
                     continue
                 }
-                rc.fill(draw::path(&feature.geometry,layer.extent), &buildings);
+                rc.fill(draw::path(&feature.geometry,&x), &buildings);
             }
         }
     }
@@ -131,7 +137,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 if feature.type_pb != GeomType::LINESTRING {
                     continue
                 }
-                rc.stroke(draw::path(&feature.geometry,layer.extent), &mid_gray, 1.0);
+                rc.stroke(draw::path(&feature.geometry,&x), &mid_gray, 1.0);
             }
         }
     }
@@ -150,8 +156,10 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 continue
             }
             for feature in &layer.features {
-                let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
-                let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
+                let cursor_x = draw::de_zig_zag(&x,feature.geometry[1]);
+                let cursor_y = draw::de_zig_zag(&x,feature.geometry[2]);
+                let logical_x = cursor_x - 2048.0 * dx as f64;
+                let logical_y = cursor_y - 2048.0 * dy as f64;
 
                 let nam = tile::taggetstr(layer,feature,&style.name);
 
@@ -159,7 +167,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 if nam.is_some() {
                     if kind_val.is_some() && kind_val.unwrap() == "country" {
                         let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
-                        if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                        if (logical_y-font_size_big < 0.0) || (logical_x - layout.width()/2.0 < 0.0) || (logical_x + layout.width()/2.0 > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
                         if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
@@ -169,7 +177,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                         rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
                     } else if kind_val.is_some() && kind_val.unwrap() == "city" {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
-                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
+                        if (logical_y-font_size_small < 0.0) || (logical_x + layout.width() > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
@@ -179,7 +187,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                         rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                     } else {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap()).build().unwrap();
-                        if (cursor_y-font_size_small < 0.0) || (cursor_x + layout.width() > 2048.0) || (cursor_y > 2048.0) {
+                        if (logical_y-font_size_small < 0.0) || (logical_x + layout.width() > 2048.0) || (logical_y > 2048.0) {
                             continue;
                         }
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
@@ -197,14 +205,16 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,style:&Sty
                 continue
             }
             for feature in &layer.features {
-                let cursor_x = draw::de_zig_zag(layer.extent,feature.geometry[1]);
-                let cursor_y = draw::de_zig_zag(layer.extent,feature.geometry[2]);
-
+                let cursor_x = draw::de_zig_zag(&x,feature.geometry[1]);
+                let cursor_y = draw::de_zig_zag(&x,feature.geometry[2]);
                 let nam = tile::taggetstr(layer,feature,"name");
+
+                let logical_x = cursor_x - 2048.0 * dx as f64;
+                let logical_y = cursor_y - 2048.0 * dy as f64;
 
                 if nam.is_some() {
                     let layout = rc.text().new_text_layout(&font_big, &nam.unwrap()).build().unwrap();
-                    if (cursor_y-font_size_big < 0.0) || (cursor_x - layout.width()/2.0 < 0.0) || (cursor_x + layout.width()/2.0 > 2048.0) || (cursor_y > 2048.0) {
+                    if (logical_x-font_size_big < 0.0) || (logical_x - layout.width()/2.0 < 0.0) || (logical_x + layout.width()/2.0 > 2048.0) || (logical_y > 2048.0) {
                         continue;
                     }
                     if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
