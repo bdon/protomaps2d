@@ -44,8 +44,8 @@
                 </div>
                 <div class="w-50">
                     <select id="font">
-                        <option value="serif">serif (default)</option>
-                        <option value="Inter">Inter</option>
+                        <option value="Inter">Inter (default)</option>
+                        <option value="serif">serif</option>
                     </select>
                 </div>
             </div>
@@ -59,9 +59,7 @@
             const hash = new L.Hash(map)
             if(!location.hash) map.setView([0,0], 1)
 
-            const fonts = [["Inter","https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2"]]
-
-            RSinit(fonts).then(() => {
+            RSinit().then(() => {
                 const layer = new RSLayer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`)
                 layer.addTo(map)
 
