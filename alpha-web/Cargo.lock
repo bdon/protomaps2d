@@ -186,6 +186,14 @@ checksum = "9cbca9424c482ee628fa549d9c812e2cd22f1180b9222c9200fdfa6eb31aecb2"
 [[package]]
 name = "piet"
 version = "0.1.0"
+source = "git+https://github.com/bdon/piet?branch=font_style_weight#e3e50a59b029ef2fb28bcd5ddb954de1238bf3fd"
+dependencies = [
+ "kurbo",
+]
+
+[[package]]
+name = "piet"
+version = "0.1.0"
 source = "git+https://github.com/bdon/piet?branch=stroke_text#4eb8df111af9409faeb9fb8044e37a910fd9d8b7"
 dependencies = [
  "kurbo",
@@ -197,7 +205,7 @@ version = "0.1.0"
 source = "git+https://github.com/bdon/piet?branch=stroke_text#4eb8df111af9409faeb9fb8044e37a910fd9d8b7"
 dependencies = [
  "cairo-rs 0.8.1",
- "piet",
+ "piet 0.1.0 (git+https://github.com/bdon/piet?branch=stroke_text)",
  "unicode-segmentation",
  "xi-unicode",
 ]
@@ -205,10 +213,10 @@ dependencies = [
 [[package]]
 name = "piet-web"
 version = "0.1.0"
-source = "git+https://github.com/bdon/piet?branch=stroke_text#4eb8df111af9409faeb9fb8044e37a910fd9d8b7"
+source = "git+https://github.com/bdon/piet?branch=font_style_weight#e3e50a59b029ef2fb28bcd5ddb954de1238bf3fd"
 dependencies = [
  "js-sys",
- "piet",
+ "piet 0.1.0 (git+https://github.com/bdon/piet?branch=font_style_weight)",
  "unicode-segmentation",
  "wasm-bindgen",
  "web-sys",
@@ -236,7 +244,7 @@ version = "0.0.1"
 dependencies = [
  "cairo-rs 0.7.1",
  "log",
- "piet",
+ "piet 0.1.0 (git+https://github.com/bdon/piet?branch=font_style_weight)",
  "piet-cairo",
  "quick-protobuf",
  "serde",

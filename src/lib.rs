@@ -1,5 +1,5 @@
 use piet::{
-    Color, FontBuilder, RenderContext, Text, TextLayoutBuilder, TextLayout
+    Color, FontBuilder, FontStyle, RenderContext, Text, TextLayoutBuilder, TextLayout
 };
 use piet::kurbo::{ Affine,Vec2 };
 
@@ -23,19 +23,13 @@ extern crate serde_derive;
 pub struct Style {
     pub labels: bool,
     pub name: String,
-    pub font: String
+    pub font: String,
+    pub text_scale: f64
 }
 
 #[derive(Serialize)]
 pub struct Result {
     pub feature_count: u64
-}
-
-pub fn small_size(zoom:u32) -> f64 {
-    if zoom < 8 {
-        return 30.0;
-    }
-    return 36.0;
 }
 
 pub fn highway_size(zoom:u32) -> (f64,f64) {
@@ -52,9 +46,9 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,_logger:&dyn Fn(&String)) -> Result {
+    rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     rc.save();
     rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
-    rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     let text = rc.solid_brush(Color::rgba8(0x44, 0x44, 0x44, 0xFF));
     let text_halo = rc.solid_brush(Color::rgba8(0xFF, 0xFF, 0xFF, 0xFF));
     let mid_gray = rc.solid_brush(Color::rgba8(0x55, 0x55, 0x55, 0xFF));
@@ -145,11 +139,11 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
     }
 
     let mut collider = label::Collider{bboxes:Vec::new()};
-    let font_size_big = 20.0;
-    let font_big = rc.text().new_font_by_name(&style.font, font_size_big).build().unwrap();
+    let font_size_big = 18.0 * style.text_scale;
+    let font_big = rc.text().new_font_by_name(&style.font, font_size_big,100, FontStyle::Normal).build().unwrap();
 
-    let font_size_small = small_size(zoom);
-    let font_small = rc.text().new_font_by_name(&style.font, font_size_small).build().unwrap();
+    let font_size_small = 12.0 * style.text_scale;
+    let font_small = rc.text().new_font_by_name(&style.font, font_size_small,400, FontStyle::Normal).build().unwrap();
 
     if style.labels == true {
 
@@ -175,7 +169,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                         if !collider.add((cursor_x-layout.width()/2.0,cursor_y-font_size_big),(cursor_x+layout.width()/2.0,cursor_y)) {
                             continue;
                         }
-                        rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,8.0);
+                        rc.stroke_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text_halo,6.0);
                         rc.draw_text(&layout, (cursor_x-layout.width()/2.0,cursor_y), &text);
                     } else if kind_val.is_some() && kind_val.unwrap() == "city" {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap(),None).build().unwrap();
@@ -185,7 +179,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
                             continue;
                         }
-                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
+                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,6.0);
                         rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                     } else {
                         let layout = rc.text().new_text_layout(&font_small, &nam.unwrap(),None).build().unwrap();
@@ -195,7 +189,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                         if !collider.add((cursor_x,cursor_y-font_size_small),(cursor_x+layout.width(),cursor_y)) {
                             continue;
                         }
-                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,8.0);
+                        rc.stroke_text(&layout, (cursor_x,cursor_y), &text_halo,    6.0);
                         rc.draw_text(&layout, (cursor_x,cursor_y), &text);
                     }
                 }

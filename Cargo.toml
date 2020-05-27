@@ -11,7 +11,7 @@ readme = "README"
 categories = ["graphics"]
 
 [dependencies]
-piet = { git = "https://github.com/bdon/piet", branch = "stroke_text" }
+piet = { git = "https://github.com/bdon/piet", branch = "font_style_weight" }
 quick-protobuf = "^0.6"
 log = "0.4.8"
 serde = "^1.0"

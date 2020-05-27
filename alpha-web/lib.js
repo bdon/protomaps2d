@@ -15,7 +15,7 @@ const RSinit = async font_faces => {
     await init()
     font_faces = font_faces || [["Inter","https://cdn.protomaps.com/fonts/woff2/Inter.var.woff2"]]
     for (var f of font_faces) {
-        const font = new FontFace(f[0],`url(${f[1]})`)
+        var font = new FontFace(f[0],`url(${f[1]})`,{weight:'100 900'})
         await font.load()
         document.fonts.add(font)
     }
@@ -25,7 +25,7 @@ const RSLayer = L.GridLayer.extend({
     initialize: function(tile_url,options) {
         options = options || {}
         options.attribution = options.attribution || '<a href="https://protomaps.com">Protomaps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        options.style = options.style || {labels:true,name:"name",font:"Inter"} 
+        options.style = options.style || {labels:true,name:"name",font:"Inter",text_scale:ratio} 
         options.maxZoom = options.maxZoom || 19
         options.tileSize = tile_size
         L.setOptions(this, options);
