@@ -12,6 +12,7 @@ categories = ["graphics"]
 
 [dependencies]
 piet = { git = "https://github.com/bdon/piet", branch = "font_style_weight" }
+# piet = { path = "../../rust/piet/piet" }
 quick-protobuf = "^0.6"
 log = "0.4.8"
 serde = "^1.0"

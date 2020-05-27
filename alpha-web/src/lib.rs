@@ -8,7 +8,7 @@ use std::panic;
 extern crate console_error_panic_hook;
 
 #[wasm_bindgen]
-pub fn wasm_render_tile(tile_id: &str,buf: Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32, style_js:&JsValue) -> JsValue {
+pub fn wasm_render_tile(tile_id: &str,buf: &[u8], zoom:u32,total:u32,dx:u32,dy:u32, style_js:&JsValue) -> JsValue {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     let style: Style = style_js.into_serde().unwrap();

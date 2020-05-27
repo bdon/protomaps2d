@@ -186,7 +186,7 @@ checksum = "9cbca9424c482ee628fa549d9c812e2cd22f1180b9222c9200fdfa6eb31aecb2"
 [[package]]
 name = "piet"
 version = "0.1.0"
-source = "git+https://github.com/bdon/piet?branch=font_style_weight#e3e50a59b029ef2fb28bcd5ddb954de1238bf3fd"
+source = "git+https://github.com/bdon/piet?branch=font_style_weight#ff66071a65d3987db8d1031c75cc9149f05f5a3e"
 dependencies = [
  "kurbo",
 ]
@@ -213,7 +213,7 @@ dependencies = [
 [[package]]
 name = "piet-web"
 version = "0.1.0"
-source = "git+https://github.com/bdon/piet?branch=font_style_weight#e3e50a59b029ef2fb28bcd5ddb954de1238bf3fd"
+source = "git+https://github.com/bdon/piet?branch=font_style_weight#ff66071a65d3987db8d1031c75cc9149f05f5a3e"
 dependencies = [
  "js-sys",
  "piet 0.1.0 (git+https://github.com/bdon/piet?branch=font_style_weight)",

@@ -74,18 +74,15 @@ const RSLayer = L.GridLayer.extend({
         var tile_url = this.tile_url.replace("{z}",coords.z).replace("{x}",coords.x).replace("{y}",coords.y)
         tile.url = tile_url
 
-        setTimeout(() => {
+        fetch(tile_url).then(resp => {
+            return resp.arrayBuffer()
+        }).then(buf => {
             if (tile.deleted) return
-            fetch(tile_url).then(resp => {
-                return resp.arrayBuffer()
-            }).then(buf => {
-                if (tile.deleted) return
-                var arr = new Uint8Array(buf)
-                tile.arr = arr
-                var result = wasm_render_tile(tile.id,arr,coords.z,tile.total,tile.dx,tile.dy,this.style)
-                done(error,tile)
-                })
-        },200)
+            var arr = new Uint8Array(buf)
+            tile.arr = arr
+            var result = wasm_render_tile(tile.id,arr,coords.z,tile.total,tile.dx,tile.dy,this.style)
+            done(error,tile)
+        })
         return tile
     },
 

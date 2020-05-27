@@ -45,7 +45,7 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
 }
 
 
-pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,_logger:&dyn Fn(&String)) -> Result {
+pub fn render_tile(rc:&mut impl RenderContext, buf:&[u8], zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,_logger:&dyn Fn(&String)) -> Result {
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
     rc.save();
     rc.transform(Affine::translate(Vec2{x:-2048.0*(dx as f64),y:-2048.0*(dy as f64)}));
@@ -145,6 +145,8 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
     let font_size_small = 12.0 * style.text_scale;
     let font_small = rc.text().new_font_by_name(&style.font, font_size_small,400, FontStyle::Normal).build().unwrap();
 
+    let poi_font = rc.text().new_font_by_name(&style.font, 12.0 * style.text_scale,400, FontStyle::Normal).build().unwrap();
+
     if style.labels == true {
 
         for layer in &tile.layers {
@@ -209,7 +211,7 @@ pub fn render_tile(rc:&mut impl RenderContext, buf:&Vec<u8>, zoom:u32,total:u32,
                 let logical_y = cursor_y - 2048.0 * dy as f64;
 
                 if nam.is_some() {
-                    let layout = rc.text().new_text_layout(&font_big, &nam.unwrap(),None).build().unwrap();
+                    let layout = rc.text().new_text_layout(&poi_font, &nam.unwrap(),None).build().unwrap();
                     if (logical_x-font_size_big < 0.0) || (logical_x - layout.width()/2.0 < 0.0) || (logical_x + layout.width()/2.0 > 2048.0) || (logical_y > 2048.0) {
                         continue;
                     }
