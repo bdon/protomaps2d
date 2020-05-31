@@ -1,12 +1,12 @@
 [package]
-name = "protomaps-alpha"
+name = "protomaps2d"
 version = "0.0.1"
 authors = ["Brandon Liu <brandon@protomaps.com>"]
 license = "BSD"
 edition = "2018"
 keywords = ["graphics", "gis"]
 repository = "https://github.com/protomaps/alpha"
-description = "A retargetable rasterizer for map tiles."
+description = "2D rasterization library for map tiles."
 readme = "README"
 categories = ["graphics"]
 
