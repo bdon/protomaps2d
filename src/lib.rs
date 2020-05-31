@@ -44,6 +44,16 @@ pub fn highway_size(zoom:u32) -> (f64,f64) {
     }
 }
 
+pub fn fromHex(hex: &String) -> Color {
+    let sr: String = hex.chars().skip(1).take(2).collect();
+    let sg: String = hex.chars().skip(3).take(2).collect();
+    let sb: String = hex.chars().skip(5).take(2).collect();
+    let r = u8::from_str_radix(&sr, 16).unwrap();
+    let g = u8::from_str_radix(&sg, 16).unwrap();
+    let b = u8::from_str_radix(&sb, 16).unwrap();
+    return Color::rgb8(r,g,b);
+}
+
 
 pub fn render_tile(rc:&mut impl RenderContext, buf:&[u8], zoom:u32,total:u32,dx:u32,dy:u32,style:&Style,_logger:&dyn Fn(&String)) -> Result {
     rc.clear(Color::rgba8(0xF6,0xE7,0xD4,0xFF));
