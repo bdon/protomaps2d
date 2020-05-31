@@ -17,7 +17,7 @@ crate-type = ["cdylib"]
 console_error_panic_hook = "0.1.6"
 piet-web = { git = "https://github.com/bdon/piet", branch = "font_style_weight" }
 # piet-web = { path = "../../../rust/piet/piet-web" }
-protomaps-alpha = { path = ".." }
+protomaps2d = { path = ".." }
 console_log = "0.1"
 
 [dependencies.wasm-bindgen]

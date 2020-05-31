@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
 use std::fs::File;
-use protomaps_alpha::render_tile;
+use protomaps2d::{render_tile,Style};
 
 use piet::RenderContext;
 use cairo::{Context, Format, ImageSurface};
@@ -22,7 +22,12 @@ fn main() {
 
 
     let bytes = fs::read(vector_tile);
-    render_tile(&mut piet_context,&bytes.unwrap(),zoom.parse::<u32>().unwrap());
+    let s = Style{bg_color:"#ffffff".to_string(),font:"Helvetica".to_string(),labels:true,text_scale:1.0,name:"name".to_string()};
+
+    fn logger(s: &String) {
+        println!("{}", s);
+    }
+    render_tile(&mut piet_context,&bytes.unwrap(),zoom.parse::<u32>().unwrap(),1,0,0,&s,&logger);
 
     piet_context.finish().unwrap();
     surface.flush();

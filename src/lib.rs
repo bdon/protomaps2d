@@ -24,7 +24,8 @@ pub struct Style {
     pub labels: bool,
     pub name: String,
     pub font: String,
-    pub text_scale: f64
+    pub text_scale: f64,
+    pub bg_color: String
 }
 
 #[derive(Serialize)]

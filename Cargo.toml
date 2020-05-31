@@ -19,10 +19,6 @@ serde = "^1.0"
 serde_derive = "^1.0"
 
 [target.'cfg(not(any(target_arch="wasm32", target_os="windows")))'.dependencies]
-piet-cairo = { git = "https://github.com/bdon/piet", branch = "stroke_text" }
-cairo-rs = { version = "0.7.1", default_features = false}
-
-[dev-dependencies.cairo-rs]
-version = "0.7.1"
-features = ["png"]
-default-features = false
+piet-cairo = { git = "https://github.com/bdon/piet", branch = "font_style_weight" }
+# piet-cairo = { path = "../../rust/piet/piet-cairo" }
+cairo-rs = { version = "0.8.1", features = ["png"]}
