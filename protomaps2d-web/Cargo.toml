@@ -1,12 +1,12 @@
 [package]
-name = "protomaps-rs"
+name = "protomaps2d-web"
 version = "0.0.1"
 authors = ["Brandon Liu <brandon@protomaps.com>"]
 license = "BSD"
 edition = "2018"
 keywords = ["graphics", "gis"]
-repository = "https://github.com/protomaps/protomaps.rs"
-description = "WASM target for Protomaps RS"
+repository = "https://github.com/protomaps/protomaps2d"
+description = "2D rasterization library for vector map tiles - WebAssembly target"
 readme = "README"
 categories = ["graphics"]
 

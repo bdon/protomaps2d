@@ -5,8 +5,8 @@ authors = ["Brandon Liu <brandon@protomaps.com>"]
 license = "BSD"
 edition = "2018"
 keywords = ["graphics", "gis"]
-repository = "https://github.com/protomaps/alpha"
-description = "2D rasterization library for map tiles."
+repository = "https://github.com/protomaps/protomaps2d"
+description = "2D rasterization library for vector map tiles."
 readme = "README"
 categories = ["graphics"]
 
