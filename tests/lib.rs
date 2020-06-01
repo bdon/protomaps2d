@@ -1,7 +1,7 @@
 
 
-mod protomaps_alpha_tests {
-    use protomaps_alpha::label::Collider;
+mod protomaps2d_tests {
+    use protomaps2d::label::Collider;
 
     #[test]
     fn test_one() {

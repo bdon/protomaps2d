@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{window, HtmlCanvasElement, console};
 use piet_web::WebRenderContext;
-use protomaps_alpha::{render_tile,Style,Result};
+use protomaps2d::{render_tile,Style,Result};
 
 use std::panic;
 extern crate console_error_panic_hook;

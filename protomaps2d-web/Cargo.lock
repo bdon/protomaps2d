@@ -48,23 +48,15 @@ checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "cairo-rs"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e05db47de3b0f09a222fa4bba2eab957d920d4243962a86b2d77ab401e4a359c"
-dependencies = [
- "bitflags",
- "cairo-sys-rs",
- "libc",
-]
-
-[[package]]
-name = "cairo-rs"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "157049ba9618aa3a61c39d5d785102c04d3b1f40632a706c621a9aedc21e6084"
 dependencies = [
  "bitflags",
  "cairo-sys-rs",
+ "glib",
+ "glib-sys",
+ "gobject-sys",
  "libc",
 ]
 
@@ -74,6 +66,7 @@ version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff65ba02cac715be836f63429ab00a767d48336efc5497c5637afb53b4f14d63"
 dependencies = [
+ "glib-sys",
  "libc",
  "pkg-config",
 ]
@@ -127,10 +120,112 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-channel"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f366ad74c28cca6ba456d95e6422883cfb4b252a83bed929c83abfdbbf2967d5"
+dependencies = [
+ "futures-core",
+]
+
+[[package]]
+name = "futures-core"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59f5fff90fd5d971f936ad674802482ba441b6f09ba5e15fd8b39145582ca399"
+
+[[package]]
+name = "futures-executor"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10d6bb888be1153d3abeb9006b11b02cf5e9b209fda28693c31ae1e4e012e314"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
+name = "futures-macro"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0b5a30a4328ab5473878237c447333c093297bded83a4983d10f4deea240d39"
+dependencies = [
+ "proc-macro-hack",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "futures-task"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdb66b5f09e22019b1ab0830f7785bcea8e7a42148683f99214f73f8ec21a626"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
+name = "futures-util"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8764574ff08b701a084482c3c7031349104b07ac897393010494beaa18ce32c6"
+dependencies = [
+ "futures-core",
+ "futures-macro",
+ "futures-task",
+ "pin-project",
+ "pin-utils",
+ "proc-macro-hack",
+ "proc-macro-nested",
+ "slab",
+]
+
+[[package]]
 name = "gimli"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bcc8e0c9bce37868955864dbecd2b1ab2bdf967e6f28066d65aaac620444b65c"
+
+[[package]]
+name = "glib"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40fb573a09841b6386ddf15fd4bc6655b4f5b106ca962f57ecaecde32a0061c0"
+dependencies = [
+ "bitflags",
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-task",
+ "futures-util",
+ "glib-sys",
+ "gobject-sys",
+ "lazy_static",
+ "libc",
+]
+
+[[package]]
+name = "glib-sys"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95856f3802f446c05feffa5e24859fe6a183a7cb849c8449afc35c86b1e316e2"
+dependencies = [
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
+name = "gobject-sys"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31d1a804f62034eccf370006ccaef3708a71c31d561fee88564abe71177553d9"
+dependencies = [
+ "glib-sys",
+ "libc",
+ "pkg-config",
+]
 
 [[package]]
 name = "itoa"
@@ -184,6 +279,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cbca9424c482ee628fa549d9c812e2cd22f1180b9222c9200fdfa6eb31aecb2"
 
 [[package]]
+name = "once_cell"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b631f7e854af39a1739f401cf34a8a013dfe09eac4fa4dba91e9768bd28168d"
+
+[[package]]
 name = "piet"
 version = "0.1.0"
 source = "git+https://github.com/bdon/piet?branch=font_style_weight#ff66071a65d3987db8d1031c75cc9149f05f5a3e"
@@ -192,20 +293,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "piet"
-version = "0.1.0"
-source = "git+https://github.com/bdon/piet?branch=stroke_text#4eb8df111af9409faeb9fb8044e37a910fd9d8b7"
-dependencies = [
- "kurbo",
-]
-
-[[package]]
 name = "piet-cairo"
 version = "0.1.0"
-source = "git+https://github.com/bdon/piet?branch=stroke_text#4eb8df111af9409faeb9fb8044e37a910fd9d8b7"
+source = "git+https://github.com/bdon/piet?branch=font_style_weight#dc0af5f4b6452bc75ae3742dfd655df74814c963"
 dependencies = [
- "cairo-rs 0.8.1",
- "piet 0.1.0 (git+https://github.com/bdon/piet?branch=stroke_text)",
+ "cairo-rs",
+ "piet",
  "unicode-segmentation",
  "xi-unicode",
 ]
@@ -216,7 +309,7 @@ version = "0.1.0"
 source = "git+https://github.com/bdon/piet?branch=font_style_weight#ff66071a65d3987db8d1031c75cc9149f05f5a3e"
 dependencies = [
  "js-sys",
- "piet 0.1.0 (git+https://github.com/bdon/piet?branch=font_style_weight)",
+ "piet",
  "unicode-segmentation",
  "wasm-bindgen",
  "web-sys",
@@ -224,10 +317,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "pin-project"
+version = "0.4.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edc93aeee735e60ecb40cf740eb319ff23eab1c5748abfdb5c180e4ce49f7791"
+dependencies = [
+ "pin-project-internal",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "0.4.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e58db2081ba5b4c93bd6be09c40fd36cb9193a8336c384f3b40012e531aa7e40"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pin-utils"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
+
+[[package]]
 name = "pkg-config"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
+
+[[package]]
+name = "proc-macro-hack"
+version = "0.5.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e0456befd48169b9f13ef0f0ad46d492cf9d2dbb918bcf38e01eed4ce3ec5e4"
+
+[[package]]
+name = "proc-macro-nested"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e946095f9d3ed29ec38de908c22f95d9ac008e424c7bcae54c75a79c527c694"
 
 [[package]]
 name = "proc-macro2"
@@ -239,12 +370,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "protomaps-alpha"
+name = "protomaps2d"
 version = "0.0.1"
 dependencies = [
- "cairo-rs 0.7.1",
+ "cairo-rs",
  "log",
- "piet 0.1.0 (git+https://github.com/bdon/piet?branch=font_style_weight)",
+ "piet",
  "piet-cairo",
  "quick-protobuf",
  "serde",
@@ -252,13 +383,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "protomaps-rs"
+name = "protomaps2d-web"
 version = "0.0.1"
 dependencies = [
  "console_error_panic_hook",
  "console_log",
  "piet-web",
- "protomaps-alpha",
+ "protomaps2d",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -322,6 +453,12 @@ dependencies = [
  "ryu",
  "serde",
 ]
+
+[[package]]
+name = "slab"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
 name = "syn"
