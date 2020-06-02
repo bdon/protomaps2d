@@ -1,3 +1,3 @@
 all:
-	wasm-pack build --out-name protomaps2d --target web -d pkg-web
-	wasm-pack build --out-name protomaps2d --target no-modules -d pkg-no-modules
+	wasm-pack build --out-name protomaps2d --target no-modules
+	cat src/lib.js >> pkg/protomaps2d.js

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>protomaps2d</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.css"></link>
+        <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+        <script src="https://cdn.protomaps.com/leaflet/1.6.0/leaflet.js"></script>
+        <script src="https://cdn.protomaps.com/leaflet-hash/leaflet-hash.js"></script>
+        <script src="pkg/protomaps2d.js"></script>
+    </head>
+    <body class="vh-100 ma0 bg-light-gray sans-serif">
+        <div class="absolute bg-white bottom-0 left-0 ma2 pa3 w5 z-9999 f7">
+            <div class="flex">
+                <div class="w-50">
+                    Labels
+                </div>
+                <div class="w-50">
+                    <input type="checkbox" id="labels" checked></input>
+                </div>
+            </div>
+            <div class="flex mt2">
+                <div class="w-50">
+                    Language
+                </div>
+                <div class="w-50">
+                    <select id="lang">
+                        <option value="name">Default (local)</option>
+                        <option value="name:en">English</option>
+                        <option value="name:zh">Chinese</option>
+                        <option value="name:ja">Japanese</option>
+                        <option value="name:de">German</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex mt2">
+                <div class="w-50">
+                    Font
+                </div>
+                <div class="w-50">
+                    <select id="font">
+                        <option value="Inter">Inter (default)</option>
+                        <option value="serif">serif</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div id="map" class="h-100"></div>
+        <script>
+            const KEY = ""
+            const map = L.map('map',{crs:protomaps2d.crs()}).setView([51.505, -0.09], 13);
+            protomaps2d.init("pkg/protomaps2d_bg.wasm").then(() => {
+                const layer = new protomaps2d.Layer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=${KEY}`).addTo(map)
+            })
+        </script>
+    </body>
+</html>
