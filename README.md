@@ -2,6 +2,8 @@
 
 Renders vector geometry tiles to 2D images.
 
+This project has been deprecated in favor of MapLibre GL JS and [protomaps-leaflet](https://github.com/protomaps/protomaps-leaflet).
+
 ## Motivation
 
 Zoomable maps have traditionally been served as 256x256 image tiles. These static image files have numerous drawbacks:
@@ -17,8 +19,6 @@ Zoomable maps have traditionally been served as 256x256 image tiles. These stati
 For the web in particular, protomaps2d is integrated with the popular Leaflet library as well as the font loading and complex text layout features standard across web browsers. 
 
 ## How to use
-
-**protomaps2d** is in a usable state but missing many important features. It's being developed in concert with the Protomaps web map API. Documentation on how to use protomaps2d with other data sources is forthcoming.
 
 Cairo backend:
 `cargo run INPUT.pbf OUTPUT.png ZOOM_LEVEL`
