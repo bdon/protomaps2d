@@ -52,7 +52,7 @@
             const hash = new L.Hash(map)
             if(!location.hash) map.setView([0,0], 1)
             protomaps2d.init("https://cdn.protomaps.com/protomaps2d/0.0.1/protomaps2d_bg.wasm").then(() => {
-                const layer = new protomaps2d.Layer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=b4b7a9e0e62ce577`)
+                const layer = new protomaps2d.Layer(`https://api.protomaps.com/tiles/v1/{z}/{x}/{y}.pbf?key=1003762824b9687f`)
                 layer.addTo(map)
 
                 document.getElementById('labels').addEventListener("change", e => {
